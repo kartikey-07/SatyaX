@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How SatyaX Works — AI-Powered Fact Verification</title>
+  <meta name="description" content="Learn how SatyaX turns any article, headline, URL, or claim into an evidence-backed credibility assessment using BERT, real-time web search, and Gemini AI." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    /* ── How SatyaX Works — Page Styles ── */
+    .hiw-hero {
+      text-align: center;
+      padding: 5rem 1.5rem 3rem;
+      max-width: 780px;
+      margin: 0 auto;
+    }
+    .hiw-hero-tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent-cyan);
+      border: 1px solid rgba(6,182,212,0.3);
+      background: rgba(6,182,212,0.07);
+      padding: 0.3rem 0.9rem;
+      border-radius: 99px;
+      margin-bottom: 1.5rem;
+    }
+    .hiw-hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 1.2rem;
+      background: linear-gradient(135deg, #e2e8f0 30%, #a78bfa 70%, #06b6d4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hiw-hero p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      max-width: 600px;
+      margin: 0 auto 2rem;
+    }
+    .hiw-pillars {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .hiw-pillar {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.35rem 0.9rem;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      background: var(--surface);
+    }
+    .hiw-pillar span { margin-right: 0.35rem; }
+
+    /* ── Pipeline Steps ── */
+    .hiw-steps {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 1.5rem 4rem;
+    }
+    .hiw-section-label {
+      text-align: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 2.5rem;
+    }
+
+    .step-card {
+      position: relative;
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 1.5rem;
+      padding: 1.8rem 2rem 1.8rem 0;
+      border-bottom: 1px solid var(--border);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .step-card.visible { opacity: 1; transform: translateY(0); }
+    .step-card:last-child { border-bottom: none; }
+
+    .step-num {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+    .step-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--accent-cyan));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: 900;
+      color: white;
+      flex-shrink: 0;
+      box-shadow: 0 0 20px rgba(139,92,246,0.3);
+    }
+    .step-line {
+      width: 2px;
+      flex: 1;
+      min-height: 24px;
+      background: linear-gradient(to bottom, var(--primary), transparent);
+      margin-top: 6px;
+    }
+    .step-card:last-child .step-line { display: none; }
+
+    .step-body {}
+    .step-tag {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent-cyan);
+      margin-bottom: 0.35rem;
+    }
+    .step-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.01em;
+    }
+    .step-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 0.9rem;
+    }
+    .step-signals {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 0.9rem;
+    }
+    .step-signal {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.2rem 0.65rem;
+      border-radius: 5px;
+      background: rgba(139,92,246,0.12);
+      border: 1px solid rgba(139,92,246,0.25);
+      color: var(--context);
+    }
+    .step-example {
+      background: rgba(0,0,0,0.25);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent-cyan);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 0.75rem 1rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .step-example strong { color: var(--text); font-weight: 600; }
+    .step-example code {
+      background: rgba(6,182,212,0.1);
+      color: var(--accent-cyan);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-family: monospace;
+    }
+
+    /* ── Verdict Showcase ── */
+    .verdict-showcase {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+    .vs-item {
+      padding: 0.55rem 0.75rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .vs-real        { background: var(--real-bg);       color: var(--real);       border: 1px solid var(--real-border); }
+    .vs-fake        { background: var(--fake-bg);       color: var(--fake);       border: 1px solid var(--fake-border); }
+    .vs-misleading  { background: var(--misleading-bg); color: var(--misleading); border: 1px solid var(--misleading-border); }
+    .vs-partial     { background: var(--partial-bg);    color: var(--partial);    border: 1px solid var(--partial-border); }
+    .vs-context     { background: var(--context-bg);    color: var(--context);    border: 1px solid var(--context-border); }
+    .vs-unverified  { background: var(--unverified-bg); color: var(--unverified); border: 1px solid var(--unverified-border); }
+
+    /* ── Truth Score Demo ── */
+    .truth-demo {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+    .td-block {
+      padding: 0.9rem;
+      border-radius: var(--radius-sm);
+      text-align: center;
+    }
+    .td-block.high   { background: var(--real-bg);       border: 1px solid var(--real-border); }
+    .td-block.medium { background: var(--misleading-bg); border: 1px solid var(--misleading-border); }
+    .td-block.low    { background: var(--fake-bg);       border: 1px solid var(--fake-border); }
+    .td-range  { font-size: 1.4rem; font-weight: 900; }
+    .td-label  { font-size: 0.72rem; font-weight: 700; margin: 0.2rem 0 0.4rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .td-desc   { font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; }
+    .td-block.high   .td-range, .td-block.high   .td-label { color: var(--real); }
+    .td-block.medium .td-range, .td-block.medium .td-label { color: var(--misleading); }
+    .td-block.low    .td-range, .td-block.low    .td-label { color: var(--fake); }
+
+    /* ── What SatyaX Measures ── */
+    .measures-section {
+      max-width: 860px;
+      margin: 0 auto 4rem;
+      padding: 0 1.5rem;
+    }
+    .measures-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+    @media (max-width: 600px) { .measures-grid { grid-template-columns: 1fr; } }
+
+    .measure-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      transition: background var(--transition);
+    }
+    .measure-card:hover { background: var(--surface-hover); }
+    .measure-top { display: flex; justify-content: space-between; align-items: flex-start; }
+    .measure-name { font-size: 0.88rem; font-weight: 700; color: var(--text); }
+    .measure-importance {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    .imp-high   { background: var(--real-bg);       color: var(--real);       border: 1px solid var(--real-border); }
+    .imp-medium { background: var(--misleading-bg); color: var(--misleading); border: 1px solid var(--misleading-border); }
+    .measure-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; }
+
+    /* ── Architecture Flow ── */
+    .arch-section {
+      max-width: 860px;
+      margin: 0 auto 4rem;
+      padding: 0 1.5rem;
+    }
+    .arch-flow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      margin-top: 1.5rem;
+    }
+    .arch-node {
+      width: 100%;
+      max-width: 400px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.7rem 1.2rem;
+      text-align: center;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      transition: background var(--transition), border-color var(--transition);
+      cursor: default;
+    }
+    .arch-node:hover { background: var(--surface-hover); border-color: var(--primary); }
+    .arch-node.highlighted {
+      border-color: var(--primary);
+      background: rgba(139,92,246,0.1);
+      color: var(--context);
+    }
+    .arch-arrow {
+      width: 2px;
+      height: 20px;
+      background: linear-gradient(to bottom, var(--primary), var(--accent-cyan));
+      position: relative;
+    }
+    .arch-arrow::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 6px solid var(--accent-cyan);
+    }
+
+    /* ── Limitations / Not Oracle ── */
+    .limits-section {
+      max-width: 860px;
+      margin: 0 auto 4rem;
+      padding: 0 1.5rem;
+    }
+    .limits-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+    @media (max-width: 600px) { .limits-grid { grid-template-columns: 1fr; } }
+    .limit-card {
+      background: var(--fake-bg);
+      border: 1px solid var(--fake-border);
+      border-radius: var(--radius-sm);
+      padding: 1rem 1.2rem;
+    }
+    .limit-title { font-size: 0.85rem; font-weight: 700; color: var(--fake); margin-bottom: 0.35rem; }
+    .limit-desc  { font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; }
+
+    /* ── Privacy ── */
+    .privacy-section {
+      max-width: 860px;
+      margin: 0 auto 5rem;
+      padding: 0 1.5rem;
+    }
+    .privacy-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+    .privacy-card {
+      background: var(--real-bg);
+      border: 1px solid var(--real-border);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      font-size: 0.82rem;
+      color: var(--real);
+      font-weight: 600;
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-start;
+      line-height: 1.5;
+    }
+
+    /* ── Section headings ── */
+    .hiw-section-heading {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      margin-bottom: 0.4rem;
+    }
+    .hiw-section-sub {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 0;
+    }
+    .section-divider {
+      max-width: 860px;
+      margin: 0 auto 2.5rem;
+      padding: 0 1.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 2.5rem;
+    }
+
+    /* ── Back button ── */
+    .back-bar {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 0;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 0.4rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      background: var(--surface);
+      transition: all var(--transition);
+    }
+    .back-btn:hover { color: var(--text); background: var(--surface-hover); border-color: var(--primary); }
+
+    /* ── CTA ── */
+    .hiw-cta {
+      text-align: center;
+      padding: 3rem 1.5rem 5rem;
+    }
+    .hiw-cta h2 { font-size: 1.8rem; font-weight: 800; color: var(--text); margin-bottom: 0.75rem; }
+    .hiw-cta p  { color: var(--text-muted); margin-bottom: 1.5rem; }
+    .hiw-cta .btn { display: inline-flex; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <a href="/" style="display:flex;align-items:center;gap:0.6rem;text-decoration:none">
+          <img src="/static/logo.jpg" alt="SatyaX" class="logo-img" />
+          <span class="logo-text">Satya<span class="logo-accent">X</span></span>
+        </a>
+      </div>
+      <nav style="margin-left:auto;display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+        <a href="/" class="back-btn" style="border:none;background:none;padding:0.4rem 0.75rem;">← Verify</a>
+        <a href="/methodology" class="back-btn">Methodology</a>
+        <a href="/history" class="back-btn">History</a>
+        <a href="/faq" class="back-btn">FAQ</a>
+        <a href="/how-it-works" class="back-btn" style="color:var(--accent-cyan);border-color:rgba(6,182,212,0.3);background:rgba(6,182,212,0.07);">How It Works</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ── Hero ── -->
+  <section class="hiw-hero">
+    <div class="hiw-hero-tag">Under the Hood</div>
+    <h1>How SatyaX Works</h1>
+    <p>
+      How SatyaX turns an article, headline, URL, or claim into an
+      evidence-backed credibility assessment. Step by step. No black boxes.
+    </p>
+    <div class="hiw-pillars">
+      <span class="hiw-pillar"><span>🔬</span>Evidence-first</span>
+      <span class="hiw-pillar"><span>🤖</span>AI-assisted</span>
+      <span class="hiw-pillar"><span>🪟</span>Transparent</span>
+      <span class="hiw-pillar"><span>🎯</span>Honest about uncertainty</span>
+    </div>
+  </section>
+
+  <!-- ── Pipeline Steps ── -->
+  <div class="hiw-steps">
+    <p class="hiw-section-label">The 9-Step Analysis Pipeline</p>
+
+    <!-- Step 1 -->
+    <div class="step-card">
+      <div class="step-num">
+        <div class="step-circle">1</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-body">
+        <div class="step-tag">Input Collection</div>
+        <div class="step-title">What can you submit?</div>
+        <div class="step-desc">
+          Users can submit any form of informational content. The system accepts
+          both direct text input and news article links for analysis.
+        </div>
+        <div class="step-signals">
+          <span class="step-signal">📰 News article text</span>
+          <span class="step-signal">💬 Headline</span>
+          <span class="step-signal">📱 Social media post</span>
+          <span class="step-signal">🔗 Article URL</span>
+          <span class="step-signal">🎭 Satire article</span>
+        </div>
+        <div class="step-example">
+          <strong>Goal:</strong> Convert any piece of information into a standardized analysis pipeline.
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-card">
+      <div class="step-num">
+        <div class="step-circle">2</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-body">
+        <div class="step-tag">Content Extraction</div>
+        <div class="step-title">URL? We scrape the full article.</div>
+        <div class="step-desc">
+          For URLs, SatyaX extracts the full article text using a <strong>5-layer cascading scraper</strong>
+          pipeline. For direct text, content moves immediately to the next stage.
+        </div>
+        <div class="step-signals">
+          <span class="step-signal">Layer 1: Trafilatura</span>
+          <span class="step-signal">Layer 2: newspaper3k</span>
+          <span class="step-signal">Layer 3: BeautifulSoup</span>
+          <span class="step-signal">Layer 4: Google Cache</span>
+          <span class="step-signal">Layer 5: Archive.org</span>
+        </div>
+        <div class="step-example">
+          Only the article body is analyzed. Noise is removed before any AI processing begins.
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-card">
+      <div class="step-num">
+        <div class="step-circle">3</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-body">
+        <div class="step-tag">Writing Style Analysis (BERT)</div>
+        <div class="step-title">Linguistic pattern detection. Not truth detection.</div>
+        <div class="step-desc">
+          A fine-tuned BERT model performs linguistic analysis — trained on 40,000+ real and fake
+          news articles. <strong>Important:</strong> this module does <em>not</em> determine whether
+          a claim is true or false. It identifies writing characteristics commonly associated with misinformation.
+        </div>
+        <div class="step-signals">
+          <span class="step-signal">📊 Sensationalism Risk</span>
+          <span class="step-signal">🎣 Clickbait Probability</span>
+          <span class="step-signal">❤️‍🔥 Emotional Language</span>
+          <span class="step-signal">📰 Journalistic Similarity</span>
+          <span class="step-signal">🎭 Manipulative Patterns</span>
+        </div>
+        <div class="step-example">
+          <strong>Example:</strong> <code>"Scientists HATE this one secret trick!"</code><br/>
+          → High Clickbait Probability · High Sensationalism · Low Journalistic Similarity
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-card">
+      <div class="step-num">
+        <div class="step-circle">4</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-body">
+        <div class="step-tag">Claim Extraction</div>
+        <div class="step-title">Every verifiable claim, isolated.</div>
+        <div class="step-desc">
+          The AI identifies individual factual claims made within the content and extracts them
+          separately. Breaking content into individual claims allows more accurate, targeted verification
+          instead of treating the entire article as one unit.
+        </div>
+        <div class="step-example">
+          <strong>Input:</strong> <code>"NASA confirms the Moon is made of cheese."</code><br/><br/>
+          <strong>Extracted:</strong><br/>
+          Claim #1 — NASA confirmed the Moon is made of cheese.<br/>
+          → Each claim is verified independently in Step 7.
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-card">
+      <div class="step-num">
+        <div class="step-circle">5</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-body">
+        <div class="step-tag">Real-Time Evidence Retrieval</div>
+        <div class="step-title">Live web search. Not a static database.</div>
+        <div class="step-desc">
+          The system searches the live web for supporting and contradicting evidence. This is not a
+          pre-built fact database — results reflect current publicly available information.
+        </div>
+        <div class="step-signals">
+          <span class="step-signal">📰 News reports</span>
+          <span class="step-signal">🏛️ Official announcements</span>
+          <span class="step-signal">🏗️ Government publications</span>
+          <span class="step-signal">🔬 Scientific sources</span>
+          <span class="step-signal">🌐 Public web</span>
+        </div>
+        <div class="step-example">
+          <strong>Goal:</strong> Find independent, real-time evidence related to each claim — both confirming and contradicting.
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-card">
+      <div class="step-num">
+        <div class="step-circle">6</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-body">
+        <div class="step-tag">Source Reliability Assessment</div>
+        <div class="step-title">Not all sources are equal.</div>
+        <div class="step-desc">
+          Retrieved sources are evaluated for credibility based on domain reputation, editorial
+          standards, historical reliability, and source authority. Each source is scored 1–10
+          and displayed alongside results.
+        </div>
+        <div class="step-signals">
+          <span class="step-signal" style="background:var(--real-bg);color:var(--real);border-color:var(--real-border);">✓ Trusted 9–10</span>
+          <span class="step-signal" style="background:var(--misleading-bg);color:var(--misleading);border-color:var(--misleading-border);">~ Moderate 5–8</span>
+          <span class="step-signal" style="background:var(--fake-bg);color:var(--fake);border-color:var(--fake-border);">⚠ Low 1–4</span>
+        </div>
+        <div class="step-example">
+          <strong>reuters.com</strong> → 10/10 Trusted &nbsp;|&nbsp;
+          <strong>bbc.com</strong> → 9/10 Trusted &nbsp;|&nbsp;
+          <strong>unknown-blog.net</strong> → 4/10 Low Reliability
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step-card">
+      <div class="step-num">
+        <div class="step-circle">7</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-body">
+        <div class="step-tag">AI Fact Verification Engine</div>
+        <div class="step-title">Evidence-based reasoning. Not style-based guessing.</div>
+        <div class="step-desc">
+          The verification engine (powered by Google Gemini) cross-references the original content,
+          extracted claims, retrieved evidence, and source quality to determine a verdict.
+          Unlike traditional classifiers, the engine uses evidence-based reasoning.
+        </div>
+        <div class="verdict-showcase">
+          <div class="vs-item vs-real">✅ REAL</div>
+          <div class="vs-item vs-fake">🚫 FAKE</div>
+          <div class="vs-item vs-misleading">⚠️ MISLEADING</div>
+          <div class="vs-item vs-partial">🔶 PARTIALLY TRUE</div>
+          <div class="vs-item vs-context">💬 CONTEXT NEEDED</div>
+          <div class="vs-item vs-unverified">🔍 UNVERIFIED</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 8 -->
+    <div class="step-card">
+      <div class="step-num">
+        <div class="step-circle">8</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-body">
+        <div class="step-tag">Truth Score Generation</div>
+        <div class="step-title">A credibility score from 0 to 100.</div>
+        <div class="step-desc">
+          A credibility score is generated based on evidence strength, source quality, and claim
+          verifiability. The score is a credibility indicator, not an absolute truth measurement.
+        </div>
+        <div class="truth-demo">
+          <div class="td-block high">
+            <div class="td-range">80–100</div>
+            <div class="td-label">High Credibility</div>
+            <div class="td-desc">Well-supported by evidence with strong source quality.</div>
+          </div>
+          <div class="td-block medium">
+            <div class="td-range">50–79</div>
+            <div class="td-label">Mixed Credibility</div>
+            <div class="td-desc">Some valid information but lacks context or evidence.</div>
+          </div>
+          <div class="td-block low">
+            <div class="td-range">0–49</div>
+            <div class="td-label">Low Credibility</div>
+            <div class="td-desc">Major inaccuracies or unsupported/misleading claims.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 9 -->
+    <div class="step-card">
+      <div class="step-num">
+        <div class="step-circle">9</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-body">
+        <div class="step-tag">Explainable AI Output</div>
+        <div class="step-title">Not just a verdict. A transparent explanation.</div>
+        <div class="step-desc">
+          The platform provides transparent reasoning. The goal is not only to classify content
+          but to explain <em>why</em> a conclusion was reached. Users receive the full evidence trail.
+        </div>
+        <div class="step-signals">
+          <span class="step-signal">📋 Verdict</span>
+          <span class="step-signal">📊 Truth Score</span>
+          <span class="step-signal">🎯 Confidence Level</span>
+          <span class="step-signal">🔎 Evidence Found</span>
+          <span class="step-signal">🎯 Key Claims</span>
+          <span class="step-signal">📄 Paragraph Analysis</span>
+          <span class="step-signal">🛡️ Source Reliability</span>
+          <span class="step-signal">🧒 ELI5 Explanation</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+  <section class="measures-section">
+    <div class="hiw-section-heading">What SatyaX Measures</div>
+    <div class="hiw-section-sub">Six dimensions of credibility, weighted by importance.</div>
+    <div class="measures-grid">
+      <div class="measure-card">
+        <div class="measure-top">
+          <div class="measure-name">📝 Writing Style Analysis</div>
+          <span class="measure-importance imp-medium">Medium</span>
+        </div>
+        <div class="measure-desc">Evaluates sensationalism, clickbait probability, and emotional language intensity via BERT.</div>
+      </div>
+      <div class="measure-card">
+        <div class="measure-top">
+          <div class="measure-name">🔬 Evidence Strength</div>
+          <span class="measure-importance imp-high">High</span>
+        </div>
+        <div class="measure-desc">Measures quantity and quality of supporting evidence found from real-time web search.</div>
+      </div>
+      <div class="measure-card">
+        <div class="measure-top">
+          <div class="measure-name">🛡️ Source Reliability</div>
+          <span class="measure-importance imp-high">High</span>
+        </div>
+        <div class="measure-desc">Evaluates credibility of retrieved sources based on domain reputation and editorial standards.</div>
+      </div>
+      <div class="measure-card">
+        <div class="measure-top">
+          <div class="measure-name">🎯 Claim Verifiability</div>
+          <span class="measure-importance imp-high">High</span>
+        </div>
+        <div class="measure-desc">Determines whether individual claims can be independently confirmed or refuted from public sources.</div>
+      </div>
+      <div class="measure-card">
+        <div class="measure-top">
+          <div class="measure-name">💬 Context Completeness</div>
+          <span class="measure-importance imp-medium">Medium</span>
+        </div>
+        <div class="measure-desc">Checks if important contextual information is missing that would change the meaning of the content.</div>
+      </div>
+      <div class="measure-card">
+        <div class="measure-top">
+          <div class="measure-name">⚡ Contradictory Evidence</div>
+          <span class="measure-importance imp-high">High</span>
+        </div>
+        <div class="measure-desc">Identifies credible information that directly conflicts with the claims made in the content.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Architecture Flow ── -->
+  <div class="section-divider"></div>
+  <section class="arch-section">
+    <div class="hiw-section-heading">Architecture Overview</div>
+    <div class="hiw-section-sub">The complete data flow from input to verdict.</div>
+    <div class="arch-flow">
+      <div class="arch-node">User Input</div>
+      <div class="arch-arrow"></div>
+      <div class="arch-node">5-Layer Content Extraction (Trafilatura → BS4 → Cache → Archive)</div>
+      <div class="arch-arrow"></div>
+      <div class="arch-node highlighted">📝 Writing Style Analysis (BERT)</div>
+      <div class="arch-arrow"></div>
+      <div class="arch-node">🎯 Claim Extraction (Gemini)</div>
+      <div class="arch-arrow"></div>
+      <div class="arch-node">🌐 Evidence Retrieval (DuckDuckGo Live Search)</div>
+      <div class="arch-arrow"></div>
+      <div class="arch-node">🛡️ Source Reliability Analysis</div>
+      <div class="arch-arrow"></div>
+      <div class="arch-node highlighted">🧠 AI Fact Verification Engine (Gemini Flash)</div>
+      <div class="arch-arrow"></div>
+      <div class="arch-node">📊 Truth Score Generation (0–100)</div>
+      <div class="arch-arrow"></div>
+      <div class="arch-node" style="border-color:var(--real-border);background:var(--real-bg);color:var(--real);">✅ Explainable AI Results</div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+  <section class="limits-section">
+    <div class="hiw-section-heading">What SatyaX Is Not</div>
+    <div class="hiw-section-sub">Honest limitations of AI-assisted fact analysis.</div>
+    <div class="limits-grid">
+      <div class="limit-card">
+        <div class="limit-title">Not a fact-checking oracle</div>
+        <div class="limit-desc">The platform provides AI-assisted evidence analysis and may occasionally make mistakes. Confidence levels indicate uncertainty whenever evidence is limited.</div>
+      </div>
+      <div class="limit-card">
+        <div class="limit-title">Not a replacement for experts</div>
+        <div class="limit-desc">For medical, legal, financial, or safety-critical decisions, always consult qualified professionals. AI supplements — it does not replace — expert judgment.</div>
+      </div>
+      <div class="limit-card">
+        <div class="limit-title">Not censorship</div>
+        <div class="limit-desc">The platform does not remove, report, flag, or suppress any content. It only provides an analysis when content is explicitly submitted by the user.</div>
+      </div>
+      <div class="limit-card">
+        <div class="limit-title">Not perfect</div>
+        <div class="limit-desc">Every result includes confidence levels so users always know how certain the AI is. Low confidence results should be treated with extra skepticism.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Privacy ── -->
+  <div class="section-divider"></div>
+  <section class="privacy-section">
+    <div class="hiw-section-heading">🔒 Privacy First</div>
+    <div class="hiw-section-sub">What we process and what we don't.</div>
+    <div class="privacy-grid">
+      <div class="privacy-card">✓ Only processes content you explicitly submit</div>
+      <div class="privacy-card">✓ No social media accounts accessed</div>
+      <div class="privacy-card">✓ No personal browsing history collected</div>
+      <div class="privacy-card">✓ Only publicly available information used</div>
+    </div>
+  </section>
+
+  <!-- ── CTA ── -->
+  <div class="hiw-cta">
+    <h2>Ready to verify something?</h2>
+    <p>Paste any article, headline, URL or claim and get an evidence-backed verdict in seconds.</p>
+    <a href="/" class="btn btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;">
+      <span>⚡</span> Start Verifying
+    </a>
+  </div>
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <img src="/static/logo_1.jpg" alt="SatyaX" class="footer-logo-img" />
+        <p class="footer-motto">Smart evidence. Transparent reasoning. Better decisions.</p>
+      </div>
+      <nav class="footer-links">
+        <a href="/">Home</a>
+        <a href="/methodology">Methodology</a>
+        <a href="/history">History</a>
+        <a href="/faq">FAQ</a>
+      </nav>
+      <p class="footer-copy">&copy; 2026 SatyaX. Powered by BERT + Gemini AI + DuckDuckGo.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Animate steps on scroll using IntersectionObserver
+    const cards = document.querySelectorAll('.step-card');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => entry.target.classList.add('visible'), 80);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    cards.forEach(card => observer.observe(card));
+  </script>
+</body>
+</html>

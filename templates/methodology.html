@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SatyaX Methodology | How We Evaluate Credibility</title>
+  <meta name="description" content="Learn how SatyaX evaluates credibility using writing patterns, evidence retrieval, source reliability, and AI-assisted reasoning." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <style>
+    .method-header {
+      background: rgba(8,13,26,0.85); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 1.2rem 2rem;
+      display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
+    }
+    .method-logo { font-size: 1.35rem; font-weight: 900; color: var(--text); }
+    .method-logo span { color: var(--accent-cyan); }
+    .method-container { max-width: 860px; margin: 0 auto; padding: 3rem 1.5rem; }
+    .method-hero { text-align: center; margin-bottom: 3.5rem; }
+    .method-hero h1 {
+      font-size: 2.4rem; font-weight: 900; letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #f1f5f9, #8b5cf6);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom: 1rem;
+    }
+    .method-hero p {
+      font-size: 1.05rem; color: var(--text-muted); max-width: 600px;
+      margin: 0 auto; line-height: 1.7;
+    }
+    .method-section {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 2rem 2.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .ms-num {
+      font-size: 0.68rem; font-weight: 800; color: var(--accent-purple);
+      background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.25);
+      padding: 0.2rem 0.55rem; border-radius: 5px;
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.65rem;
+      display: inline-block;
+    }
+    .ms-title { font-size: 1.15rem; font-weight: 800; color: var(--text); margin-bottom: 0.5rem; }
+    .ms-body { font-size: 0.9rem; color: var(--text-muted); line-height: 1.75; }
+    .ms-points { margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.35rem; }
+    .ms-point {
+      display: flex; gap: 0.65rem; font-size: 0.87rem; color: var(--text-muted);
+      align-items: flex-start;
+    }
+    .ms-point-icon { color: var(--accent-cyan); flex-shrink: 0; margin-top: 0.1rem; }
+    .method-disclaimer {
+      text-align: center; font-size: 0.78rem; color: var(--text-dim);
+      padding: 2rem; border-top: 1px solid var(--border); line-height: 1.65; margin-top: 2rem;
+    }
+    .footer-bar {
+      background: var(--surface); border-top: 1px solid var(--border);
+      padding: 1.5rem 2rem; text-align: center;
+      font-size: 0.75rem; color: var(--text-dim);
+    }
+    .footer-bar a { color: var(--text-muted); text-decoration: none; margin: 0 0.5rem; }
+    .footer-bar a:hover { color: var(--accent-cyan); }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="method-header">
+    <div class="method-logo">⚡ Satya<span>X</span></div>
+    <nav style="display:flex;gap:0.5rem;margin-left:auto;flex-wrap:wrap;">
+      <a href="/" class="header-nav-link">← Verify</a>
+      <a href="/how-it-works" class="header-nav-link">How It Works</a>
+      <a href="/history" class="header-nav-link">History</a>
+      <a href="/faq" class="header-nav-link">FAQ</a>
+    </nav>
+  </header>
+
+  <main class="method-container">
+
+    <div class="method-hero">
+      <h1>SatyaX Methodology</h1>
+      <p>Learn how SatyaX evaluates credibility using writing patterns, evidence retrieval, source reliability, and AI-assisted reasoning.</p>
+    </div>
+
+    <div class="method-section">
+      <div class="ms-num">Layer 1</div>
+      <div class="ms-title">Writing Style Analysis (BERT)</div>
+      <div class="ms-body">
+        SatyaX uses a BERT model fine-tuned on 40,000+ real and fake news articles to evaluate
+        <em>how</em> content is written — not whether it is factually true. This produces four
+        linguistic risk metrics.
+      </div>
+      <div class="ms-points">
+        <div class="ms-point"><span class="ms-point-icon">›</span><span><strong>Sensationalism Risk</strong> — detects alarm-driven, emotionally charged language</span></div>
+        <div class="ms-point"><span class="ms-point-icon">›</span><span><strong>Clickbait Probability</strong> — identifies attention-manipulation patterns</span></div>
+        <div class="ms-point"><span class="ms-point-icon">›</span><span><strong>Emotional Language Score</strong> — measures sentiment-driven word choice</span></div>
+        <div class="ms-point"><span class="ms-point-icon">›</span><span><strong>Style Confidence</strong> — overall model confidence in the classification</span></div>
+      </div>
+      <p style="font-size:0.78rem;color:var(--text-dim);margin-top:0.85rem;border-top:1px solid var(--border);padding-top:0.75rem;">
+        ⚠ BERT evaluates linguistic patterns only. It does not verify factual accuracy.
+        Short, neutral, factual statements often score high sensationalism — this is a known limitation.
+      </p>
+    </div>
+
+    <div class="method-section">
+      <div class="ms-num">Layer 2</div>
+      <div class="ms-title">Real-Time Evidence Retrieval</div>
+      <div class="ms-body">
+        SatyaX searches DuckDuckGo News for the first 30 words of your input, returning up to
+        5 related real-world articles. Each source is evaluated for reliability using a domain
+        trust database.
+      </div>
+      <div class="ms-points">
+        <div class="ms-point"><span class="ms-point-icon">›</span><span>No API key required — DuckDuckGo search is always-on</span></div>
+        <div class="ms-point"><span class="ms-point-icon">›</span><span>Domain reliability scored 1–10: Reuters=10, BBC=9, Unknown=5, Tabloids=2–3</span></div>
+        <div class="ms-point"><span class="ms-point-icon">›</span><span>Results are cross-referenced with the Gemini AI analysis</span></div>
+      </div>
+    </div>
+
+    <div class="method-section">
+      <div class="ms-num">Layer 3</div>
+      <div class="ms-title">AI Verification Engine (Gemini)</div>
+      <div class="ms-body">
+        Google Gemini Flash performs a deep, paragraph-level analysis of the content combined
+        with the retrieved evidence. It returns six types of output:
+      </div>
+      <div class="ms-points">
+        <div class="ms-point"><span class="ms-point-icon">›</span><span><strong>Verdict</strong> — REAL / FAKE / MISLEADING / PARTIALLY TRUE / CONTEXT NEEDED / UNVERIFIED</span></div>
+        <div class="ms-point"><span class="ms-point-icon">›</span><span><strong>Truth Score</strong> — 0–100 numeric credibility rating</span></div>
+        <div class="ms-point"><span class="ms-point-icon">›</span><span><strong>ELI5 Summary</strong> — one sentence verdict in plain English</span></div>
+        <div class="ms-point"><span class="ms-point-icon">›</span><span><strong>Key Claims</strong> — individual verifiable claims extracted and checked</span></div>
+        <div class="ms-point"><span class="ms-point-icon">›</span><span><strong>Paragraph Analysis</strong> — each section of the article classified independently</span></div>
+        <div class="ms-point"><span class="ms-point-icon">›</span><span><strong>Confusion Clarification</strong> — what is accurate, what is missing, what you should know</span></div>
+      </div>
+    </div>
+
+    <div class="method-section">
+      <div class="ms-num">Layer 4</div>
+      <div class="ms-title">URL Content Extraction (5-Layer Pipeline)</div>
+      <div class="ms-body">
+        When a URL is submitted, SatyaX attempts to extract article text through five
+        progressive fallback layers:
+      </div>
+      <div class="ms-points">
+        <div class="ms-point"><span class="ms-point-icon">›</span><span><strong>Layer 1 — Trafilatura</strong>: High-precision content extraction (primary)</span></div>
+        <div class="ms-point"><span class="ms-point-icon">›</span><span><strong>Layer 2 — newspaper3k</strong>: News-site optimised extractor</span></div>
+        <div class="ms-point"><span class="ms-point-icon">›</span><span><strong>Layer 3 — BeautifulSoup</strong>: Raw HTML paragraph extraction</span></div>
+        <div class="ms-point"><span class="ms-point-icon">›</span><span><strong>Layer 4 — Google Cache</strong>: For bot-protected sites (Reuters, NYT)</span></div>
+        <div class="ms-point"><span class="ms-point-icon">›</span><span><strong>Layer 5 — Archive.org</strong>: For paywalled or recently blocked pages</span></div>
+      </div>
+    </div>
+
+    <div class="method-section">
+      <div class="ms-num">Verdict Framework</div>
+      <div class="ms-title">Six-Category Verdict System</div>
+      <div class="ms-body">
+        SatyaX avoids binary REAL/FAKE labeling. All six verdicts carry distinct meaning:
+      </div>
+      <div class="ms-points">
+        <div class="ms-point"><span style="color:#10b981">✅</span><span><strong>REAL</strong> — Accurate, verified, or strongly supported by evidence</span></div>
+        <div class="ms-point"><span style="color:#ef4444">🚫</span><span><strong>FAKE</strong> — False, fabricated, or directly contradicted by evidence</span></div>
+        <div class="ms-point"><span style="color:#f59e0b">⚠️</span><span><strong>MISLEADING</strong> — Technically true but framed to deceive or distort</span></div>
+        <div class="ms-point"><span style="color:#f97316">🔶</span><span><strong>PARTIALLY TRUE</strong> — Some claims correct, others false or unverifiable</span></div>
+        <div class="ms-point"><span style="color:#8b5cf6">💬</span><span><strong>CONTEXT NEEDED</strong> — Accurate but missing critical background context</span></div>
+        <div class="ms-point"><span style="color:#94a3b8">🔍</span><span><strong>UNVERIFIED</strong> — Insufficient evidence to confirm or deny at analysis time</span></div>
+      </div>
+    </div>
+
+    <div class="method-disclaimer">
+      SatyaX is an AI-assisted tool. Results are based on publicly available information at analysis time.
+      AI systems can make errors, especially for recent events beyond their knowledge cutoff.
+      SatyaX is not a substitute for expert journalism, professional fact-checking, or legal judgment.
+      Always cross-reference critical claims with multiple trusted primary sources.
+    </div>
+
+  </main>
+
+  <div class="footer-bar">
+    <a href="/">Home</a>
+    <a href="/how-it-works">How It Works</a>
+    <a href="/history">History</a>
+    <a href="/faq">FAQ</a>
+    &nbsp;|&nbsp; &copy; 2026 SatyaX
+  </div>
+
+</body>
+</html>

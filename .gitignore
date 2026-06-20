@@ -1,0 +1,31 @@
+# Virtual Environments
+venv/
+env/
+.env
+
+# Database
+*.db
+*.sqlite3
+satyax.db
+pramanaai.db
+
+# Sensitive Keys & Credentials
+*.pem
+satyax-key.pem
+.clerk_keys
+
+# Large AI Models
+saved_fake_news_model/*.safetensors
+saved_fake_news_model/*.bin
+saved_fake_news_model/*.h5
+
+# Python Caches
+__pycache__/
+*.pyc
+*.pyo
+
+# Executables & Logs
+*.exe
+ngrok.exe
+*.log
+PROJECT_REVIEW.txt

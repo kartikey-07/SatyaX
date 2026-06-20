@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — SatyaX</title>
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  {% if clerk_frontend %}
+  <script async crossorigin="anonymous"
+    data-clerk-publishable-key="{{ clerk_pk }}"
+    src="{{ clerk_frontend }}/npm/@clerk/clerk-js@5/dist/clerk.browser.js">
+  </script>
+  {% endif %}
+
+  <style>
+    .admin-page { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
+
+    /* Admin Banner */
+    .admin-banner {
+      background: linear-gradient(135deg, rgba(251,191,36,0.12), rgba(251,191,36,0.04));
+      border: 1px solid rgba(251,191,36,0.3); border-radius: var(--radius);
+      padding: 1rem 1.4rem; display: flex; align-items: center; gap: 0.85rem;
+      margin-bottom: 2rem;
+    }
+    .admin-banner-icon { font-size: 1.4rem; }
+    .admin-banner-text h2 { font-size: 1rem; font-weight: 800; color: #fbbf24; margin-bottom: 0.1rem; }
+    .admin-banner-text p { font-size: 0.78rem; color: var(--text-dim); }
+
+    /* Stat Grid */
+    .admin-stats {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.85rem; margin-bottom: 2rem;
+    }
+    .admin-stat {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.2rem 1.4rem;
+      position: relative; overflow: hidden;
+      transition: all var(--transition);
+    }
+    .admin-stat::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, #fbbf24, #f59e0b); opacity: 0;
+      transition: opacity var(--transition);
+    }
+    .admin-stat:hover { background: var(--surface-hover); }
+    .admin-stat:hover::before { opacity: 1; }
+    .as-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 0.5rem; }
+    .as-value { font-size: 2rem; font-weight: 900; color: var(--text); line-height: 1; }
+    .as-sub   { font-size: 0.7rem; color: var(--text-dim); margin-top: 0.3rem; }
+    .as-icon  { font-size: 1.1rem; float: right; opacity: 0.4; }
+
+    /* Admin grid */
+    .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+    @media (max-width: 750px) { .admin-grid { grid-template-columns: 1fr; } }
+    .admin-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.4rem;
+    }
+    .admin-card-full { grid-column: 1 / -1; }
+    .admin-card-title {
+      font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 1rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .admin-card-title span { font-size: 0.7rem; color: var(--accent-cyan); text-transform: none; letter-spacing: 0; font-weight: 500; }
+
+    /* Users table */
+    .user-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .user-table th {
+      text-align: left; padding: 0.5rem 0.75rem;
+      font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+    }
+    .user-table td {
+      padding: 0.65rem 0.75rem; color: var(--text);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      vertical-align: middle;
+    }
+    .user-table tr:last-child td { border-bottom: none; }
+    .user-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .user-avatar-sm {
+      width: 28px; height: 28px; border-radius: 50%; object-fit: cover;
+      border: 1px solid var(--border); vertical-align: middle; margin-right: 0.5rem;
+    }
+    .user-role-pill {
+      font-size: 0.62rem; font-weight: 700; padding: 0.15rem 0.5rem;
+      border-radius: 99px; text-transform: uppercase;
+    }
+    .role-admin { background: rgba(251,191,36,0.15); border: 1px solid rgba(251,191,36,0.3); color: #fbbf24; }
+    .role-user  { background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.25); color: var(--context); }
+
+    /* System health */
+    .sys-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.55rem 0; border-bottom: 1px solid var(--border); font-size: 0.83rem;
+    }
+    .sys-row:last-child { border-bottom: none; }
+    .sys-label { color: var(--text-dim); }
+    .sys-val   { font-weight: 600; }
+    .sys-ok    { color: var(--real); }
+    .sys-warn  { color: var(--misleading); }
+    .sys-bad   { color: var(--fake); }
+
+    /* Recent reports table */
+    .reports-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .reports-table th { text-align: left; padding: 0.5rem 0.6rem; font-size: 0.67rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); border-bottom: 1px solid var(--border); }
+    .reports-table td { padding: 0.6rem 0.6rem; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text); }
+    .reports-table tr:last-child td { border-bottom: none; }
+    .reports-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .rpt-id { font-family: monospace; font-size: 0.72rem; color: var(--accent-cyan); }
+    .rpt-text { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted); }
+    .rpt-score { font-weight: 700; }
+
+    .empty-state { text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.85rem; }
+    .loading-shimmer { color: var(--text-dim); font-size: 0.82rem; padding: 1rem 0; text-align: center; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <a href="/" style="display:flex;align-items:center;gap:0.6rem;text-decoration:none">
+          <img src="{{ url_for('static', filename='logo.jpg') }}" alt="SatyaX" class="logo-img" />
+          <span class="logo-text">Satya<span class="logo-accent">X</span></span>
+        </a>
+      </div>
+      <nav style="margin-left:auto;display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+        <a href="/" style="font-size:0.78rem;color:var(--text-dim);text-decoration:none;padding:0.3rem 0.75rem;border:1px solid var(--border);border-radius:99px">← Verify</a>
+        <a href="/dashboard" style="font-size:0.78rem;color:var(--text-dim);text-decoration:none;padding:0.3rem 0.75rem;border:1px solid var(--border);border-radius:99px">Dashboard</a>
+        <a href="/admin" style="font-size:0.78rem;color:#fbbf24;text-decoration:none;padding:0.3rem 0.75rem;border:1px solid rgba(251,191,36,0.3);border-radius:99px;background:rgba(251,191,36,0.08)">⚙ Admin</a>
+        <div id="nav-signed-in" style="display:none;align-items:center;gap:0.5rem">
+          <img id="nav-avatar" src="" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--border);" />
+          <span id="nav-username" style="font-size:0.78rem;color:var(--text-muted)"></span>
+          <button onclick="satyaxSignOut()" title="Sign out" style="font-size:0.75rem;font-weight:600;color:#f87171;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:99px;padding:0.32rem 0.8rem;cursor:pointer;white-space:nowrap;transition:all 0.2s;font-family:inherit;" onmouseover="this.style.background='rgba(239,68,68,0.16)';this.style.borderColor='rgba(239,68,68,0.5)';this.style.color='#fca5a5'" onmouseout="this.style.background='rgba(239,68,68,0.08)';this.style.borderColor='rgba(239,68,68,0.25)';this.style.color='#f87171'">Sign Out</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Admin Page -->
+  <main class="admin-page">
+
+    <!-- Admin Banner -->
+    <div class="admin-banner">
+      <div class="admin-banner-icon">🛡️</div>
+      <div class="admin-banner-text">
+        <h2>Admin Dashboard</h2>
+        <p>Full system access. Platform analytics, user management, and system health.</p>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="admin-stats">
+      <div class="admin-stat">
+        <div class="as-icon">👥</div>
+        <div class="as-label">Total Users</div>
+        <div class="as-value" id="stat-users">—</div>
+        <div class="as-sub">Registered accounts</div>
+      </div>
+      <div class="admin-stat">
+        <div class="as-icon">🔬</div>
+        <div class="as-label">Total Reports</div>
+        <div class="as-value" id="stat-reports">—</div>
+        <div class="as-sub">In database</div>
+      </div>
+      <div class="admin-stat">
+        <div class="as-icon">🔗</div>
+        <div class="as-label">Shared Links</div>
+        <div class="as-value" id="stat-shared">—</div>
+        <div class="as-sub">Publicly accessible</div>
+      </div>
+      <div class="admin-stat">
+        <div class="as-icon">📈</div>
+        <div class="as-label">Total Analyses</div>
+        <div class="as-value" id="stat-analyses">—</div>
+        <div class="as-sub">Platform usage</div>
+      </div>
+    </div>
+
+    <!-- Admin Grid -->
+    <div class="admin-grid">
+
+      <!-- User List -->
+      <div class="admin-card admin-card-full">
+        <div class="admin-card-title">
+          User Management
+          <span id="user-count-label">Loading…</span>
+        </div>
+        <div id="user-table-wrap">
+          <div class="loading-shimmer">Loading users from Clerk…</div>
+        </div>
+      </div>
+
+      <!-- Recent Reports -->
+      <div class="admin-card admin-card-full">
+        <div class="admin-card-title">Recent Verification Reports</div>
+        <div id="reports-table-wrap">
+          <div class="loading-shimmer">Loading reports…</div>
+        </div>
+      </div>
+
+      <!-- System Health -->
+      <div class="admin-card">
+        <div class="admin-card-title">System Health</div>
+        <div id="sys-health">
+          <div class="sys-row"><span class="sys-label">Flask Server</span><span class="sys-val sys-ok">✓ Running</span></div>
+          <div class="sys-row"><span class="sys-label">Gemini AI</span><span class="sys-val" id="sh-gemini">Checking…</span></div>
+          <div class="sys-row"><span class="sys-label">BERT Model</span><span class="sys-val" id="sh-bert">Checking…</span></div>
+          <div class="sys-row"><span class="sys-label">SQLite DB</span><span class="sys-val sys-ok">✓ Connected</span></div>
+          <div class="sys-row"><span class="sys-label">Clerk Auth</span><span class="sys-val" id="sh-clerk">Checking…</span></div>
+        </div>
+      </div>
+
+      <!-- Verdict Distribution -->
+      <div class="admin-card">
+        <div class="admin-card-title">Platform Verdict Distribution</div>
+        <div id="verdict-dist-admin" style="display:flex;flex-direction:column;gap:0.5rem">
+          <div class="loading-shimmer">Loading…</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <img src="{{ url_for('static', filename='logo_1.jpg') }}" alt="SatyaX" class="footer-logo-img" />
+        <p class="footer-motto">Smart evidence. Transparent reasoning. Better decisions.</p>
+      </div>
+      <nav class="footer-links">
+        <a href="/">Home</a><a href="/dashboard">Dashboard</a><a href="/methodology">Methodology</a>
+      </nav>
+      <p class="footer-copy">&copy; 2026 SatyaX. Admin view.</p>
+    </div>
+  </footer>
+
+  <!-- User Activity Modal -->
+  <div id="activity-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.85);backdrop-filter:blur(4px);z-index:9999;align-items:center;justify-content:center;padding:1rem;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;width:100%;max-width:700px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,0.5);overflow:hidden;">
+      <div style="padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface-hover);">
+        <h3 style="font-size:1.1rem;font-weight:700;margin:0;">Activity: <span id="activity-modal-name" style="color:var(--accent-cyan)"></span></h3>
+        <button onclick="document.getElementById('activity-modal').style.display='none'" style="background:none;border:none;color:var(--text-dim);font-size:1.2rem;cursor:pointer;">&times;</button>
+      </div>
+      <div id="activity-modal-body" style="padding:0;overflow-y:auto;flex:1;">
+        <!-- content -->
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='auth.js') }}"></script>
+  <script>
+    function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Verify admin access client-side
+      try {
+        const clerk = await waitForClerk();
+        if (!clerk.user) { window.location.href = '/sign-in'; return; }
+        const role = clerk.user.publicMetadata?.role;
+        if (role !== 'admin') { window.location.href = '/dashboard?error=access_denied'; return; }
+      } catch { /* server will also verify */ }
+
+      // Load admin data
+      loadAdminData();
+      checkSystemHealth();
+    });
+
+    async function loadAdminData() {
+      try {
+        const token = await getAuthToken();
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+        const resp = await fetch('/api/admin/stats', { headers });
+        if (resp.status === 403) { window.location.href = '/dashboard?error=access_denied'; return; }
+        if (!resp.ok) throw new Error('Failed');
+        const data = await resp.json();
+
+        // Stats
+        document.getElementById('stat-users').textContent   = data.total_users   ?? '—';
+        document.getElementById('stat-reports').textContent = data.total_reports  ?? '—';
+        document.getElementById('stat-shared').textContent  = data.shared_reports ?? '—';
+        document.getElementById('stat-analyses').textContent = data.total_analyses ?? '—';
+
+        // User table
+        const users = data.users || [];
+        document.getElementById('user-count-label').textContent = `${users.length} users`;
+        const wrap = document.getElementById('user-table-wrap');
+        if (users.length === 0) {
+          wrap.innerHTML = '<div class="empty-state">No users found.</div>';
+        } else {
+          wrap.innerHTML = `<table class="user-table">
+            <thead><tr>
+              <th>User</th><th>Email</th><th>Role</th><th>Analyses</th><th>Joined</th><th></th>
+            </tr></thead>
+            <tbody>
+              ${users.map(u => `<tr>
+                <td>
+                  ${u.avatar ? `<img src="${escHtml(u.avatar)}" class="user-avatar-sm" alt="" />` : ''}
+                  ${escHtml(u.name || '—')}
+                </td>
+                <td style="color:var(--text-muted)">${escHtml(u.email || '—')}</td>
+                <td><span class="user-role-pill ${u.is_admin ? 'role-admin' : 'role-user'}">${u.is_admin ? 'Admin' : 'User'}</span></td>
+                <td style="font-weight:600;color:var(--accent-cyan)">${u.analysis_count || 0}</td>
+                <td style="color:var(--text-dim);font-size:0.75rem">${u.created_at ? new Date(u.created_at).toLocaleDateString() : '—'}</td>
+                <td style="text-align:right">
+                  <button onclick="viewUserActivity('${u.user_id}', '${escHtml(u.name)}')" style="background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;padding:0.25rem 0.6rem;font-size:0.7rem;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='var(--surface-hover)'" onmouseout="this.style.background='transparent'">Activity</button>
+                </td>
+              </tr>`).join('')}
+            </tbody>
+          </table>`;
+        }
+
+        // Reports table
+        const reports = data.recent_reports || [];
+        const rWrap = document.getElementById('reports-table-wrap');
+        if (reports.length === 0) {
+          rWrap.innerHTML = '<div class="empty-state">No reports yet.</div>';
+        } else {
+          rWrap.innerHTML = `<table class="reports-table">
+            <thead><tr><th>Report ID</th><th>Content</th><th>Verdict</th><th>Score</th><th>Date</th></tr></thead>
+            <tbody>
+              ${reports.map(r => `<tr>
+                <td class="rpt-id"><a href="/report/${r.report_id}" style="color:var(--accent-cyan);text-decoration:none">${r.report_id}</a></td>
+                <td class="rpt-text">${escHtml((r.input_text||'').slice(0,80))}</td>
+                <td><span class="hi-badge ${r.verdict||'UNVERIFIED'}" style="font-size:0.62rem;padding:0.12rem 0.45rem">${(r.verdict||'?').replace('_',' ')}</span></td>
+                <td class="rpt-score">${r.truth_score ?? '?'}/100</td>
+                <td style="color:var(--text-dim);font-size:0.72rem">${r.created_at||'—'}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>`;
+        }
+
+        // Verdict distribution
+        const verdicts = data.verdict_distribution || {};
+        const total = Object.values(verdicts).reduce((a,b)=>a+b,0) || 1;
+        const verdictEl = document.getElementById('verdict-dist-admin');
+        verdictEl.innerHTML = Object.entries(verdicts).sort((a,b)=>b[1]-a[1]).map(([v,c]) => `
+          <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.78rem">
+            <span class="hi-badge ${v}" style="min-width:90px;text-align:center;font-size:0.62rem">${v.replace('_',' ')}</span>
+            <div style="flex:1;height:6px;background:var(--border);border-radius:3px">
+              <div style="height:100%;border-radius:3px;background:linear-gradient(90deg,#fbbf24,#f59e0b);width:${Math.round(c/total*100)}%"></div>
+            </div>
+            <span style="color:var(--text-dim);min-width:24px">${c}</span>
+          </div>
+        `).join('') || '<div class="empty-state">No data yet.</div>';
+
+      } catch (e) {
+        document.getElementById('user-table-wrap').innerHTML = '<div class="empty-state">Failed to load data. Admin API may need Clerk keys configured.</div>';
+      }
+    }
+
+    async function checkSystemHealth() {
+      try {
+        const token = await getAuthToken();
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const resp = await fetch('/api/admin/health', { headers });
+        if (!resp.ok) throw new Error();
+        const h = await resp.json();
+        const el = (id, ok) => {
+          document.getElementById(id).textContent = ok ? '✓ Active' : '✗ Unavailable';
+          document.getElementById(id).className = 'sys-val ' + (ok ? 'sys-ok' : 'sys-bad');
+        };
+        el('sh-gemini', h.gemini);
+        el('sh-bert',   h.bert);
+        el('sh-clerk',  h.clerk);
+      } catch {
+        ['sh-gemini','sh-bert','sh-clerk'].forEach(id => {
+          document.getElementById(id).textContent = 'Unknown';
+          document.getElementById(id).className = 'sys-val sys-warn';
+        });
+      }
+    }
+
+    async function viewUserActivity(userId, name) {
+      document.getElementById('activity-modal-name').textContent = name;
+      document.getElementById('activity-modal-body').innerHTML = '<div class="loading-shimmer">Loading activity...</div>';
+      document.getElementById('activity-modal').style.display = 'flex';
+
+      try {
+        const token = await getAuthToken();
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const resp = await fetch(`/api/admin/user_activity/${userId}`, { headers });
+        if (!resp.ok) throw new Error();
+        const data = await resp.json();
+        const history = data.history || [];
+
+        if (history.length === 0) {
+          document.getElementById('activity-modal-body').innerHTML = '<div class="empty-state">No analysis history found for this user.</div>';
+          return;
+        }
+
+        document.getElementById('activity-modal-body').innerHTML = `
+          <table class="reports-table" style="border-radius:0;">
+            <thead><tr><th style="padding-left:1.5rem">Input Text</th><th>Verdict</th><th>Score</th><th style="padding-right:1.5rem">Date</th></tr></thead>
+            <tbody>
+              ${history.map(h => `<tr>
+                <td class="rpt-text" style="max-width:300px;padding-left:1.5rem">${escHtml((h.input_text||'').slice(0,100))}</td>
+                <td><span class="hi-badge ${h.verdict||'UNVERIFIED'}" style="font-size:0.62rem;padding:0.12rem 0.45rem">${(h.verdict||'?').replace('_',' ')}</span></td>
+                <td class="rpt-score">${h.truth_score ?? '?'}/100</td>
+                <td style="color:var(--text-dim);font-size:0.72rem;padding-right:1.5rem">${h.created_at||'—'}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        `;
+      } catch (e) {
+        document.getElementById('activity-modal-body').innerHTML = '<div class="empty-state" style="color:var(--fake)">Failed to load activity.</div>';
+      }
+    }
+  </script>
+</body>
+</html>

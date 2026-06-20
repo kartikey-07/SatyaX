@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Account — SatyaX</title>
+  <meta name="description" content="Create your SatyaX account to access AI-powered fact verification." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+
+  {% if clerk_frontend %}
+  <script async crossorigin="anonymous"
+    data-clerk-publishable-key="{{ clerk_pk }}"
+    src="{{ clerk_frontend }}/npm/@clerk/clerk-js@5/dist/clerk.browser.js">
+  </script>
+  {% endif %}
+
+  <style>
+    body { background: var(--bg); min-height: 100vh; display: flex; flex-direction: column; }
+    .auth-page {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 2rem 1rem; position: relative; overflow: hidden;
+    }
+    .auth-page::before {
+      content: ''; position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 80% 20%, rgba(6,182,212,0.14) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 50% at 20% 80%, rgba(139,92,246,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .auth-card { position: relative; z-index: 1; width: 100%; max-width: 460px; }
+    .auth-brand { text-align: center; margin-bottom: 1rem; }
+    .auth-brand-logo {
+      width: 52px; height: 52px; border-radius: 14px; object-fit: cover;
+      margin-bottom: 0.75rem; box-shadow: 0 0 30px rgba(6,182,212,0.35);
+    }
+    .auth-brand-name { font-size: 1.5rem; font-weight: 900; color: var(--text); letter-spacing: -0.02em; }
+    .auth-brand-name span { color: var(--accent-cyan); }
+    .auth-brand-tag { font-size: 0.78rem; color: var(--text-dim); margin-top: 0.25rem; }
+
+    /* Perks strip */
+    .auth-perks {
+      display: flex; flex-direction: column; gap: 0.45rem;
+      margin-bottom: 1rem; padding: 0.85rem 1rem;
+      background: rgba(6,182,212,0.06); border: 1px solid rgba(6,182,212,0.18);
+      border-radius: 12px;
+    }
+    .auth-perk { font-size: 0.8rem; color: #94a3b8; display: flex; align-items: center; gap: 0.5rem; }
+    .auth-perk span:first-child { font-size: 0.9rem; }
+
+    .auth-box {
+      background: rgba(18, 18, 35, 0.85);
+      border: 1px solid rgba(6,182,212,0.2);
+      border-radius: 20px;
+      padding: 0.5rem;
+      backdrop-filter: blur(24px);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+      overflow: hidden;
+    }
+    #clerk-sign-up { min-height: 460px; }
+
+    /* ══════════════════════════════════════════
+       CLERK DARK THEME — COMPREHENSIVE OVERRIDE
+       ══════════════════════════════════════════ */
+
+    .cl-rootBox, .cl-cardBox, .cl-card,
+    .cl-scrollBox, .cl-internal-b3fm6y,
+    [data-localization-key] { background: transparent !important; }
+
+    .cl-card { box-shadow: none !important; border: none !important; padding: 1.2rem 1.6rem !important; }
+
+    .cl-headerTitle {
+      color: #f1f5f9 !important; font-family: 'Inter', sans-serif !important;
+      font-weight: 800 !important; font-size: 1.3rem !important;
+    }
+    .cl-headerSubtitle { color: #94a3b8 !important; font-family: 'Inter', sans-serif !important; }
+
+    /* ── Social Buttons: BOTH icon-only AND block+text variants ── */
+    .cl-socialButtonsBlockButton,
+    .cl-socialButtonsIconButton {
+      background: rgba(255,255,255,0.12) !important;
+      border: 1.5px solid rgba(255,255,255,0.25) !important;
+      border-radius: 10px !important; transition: all 0.2s !important;
+    }
+    .cl-socialButtonsBlockButton:hover,
+    .cl-socialButtonsIconButton:hover {
+      background: rgba(255,255,255,0.20) !important;
+      border-color: rgba(6,182,212,0.5) !important;
+      transform: translateY(-1px) !important;
+    }
+    .cl-socialButtonsBlockButtonText, .cl-socialButtonsBlockButtonArrow {
+      color: #e2e8f0 !important; font-family: 'Inter', sans-serif !important; font-weight: 600 !important;
+    }
+
+    /* ── Apple: black logo → white ── */
+    .cl-socialButtonsBlockButton[data-provider="apple"] svg,
+    .cl-socialButtonsBlockButton[data-provider="apple"] img,
+    .cl-socialButtonsIconButton[data-provider="apple"] svg,
+    .cl-socialButtonsIconButton[data-provider="apple"] img,
+    [data-provider="apple"] .cl-providerIcon svg,
+    [data-provider="apple"] .cl-providerIcon img {
+      filter: invert(1) brightness(100) !important;
+    }
+
+    /* ── GitHub: dark Octocat → white ── */
+    .cl-socialButtonsBlockButton[data-provider="github"] svg,
+    .cl-socialButtonsBlockButton[data-provider="github"] img,
+    .cl-socialButtonsIconButton[data-provider="github"] svg,
+    .cl-socialButtonsIconButton[data-provider="github"] img,
+    [data-provider="github"] .cl-providerIcon svg,
+    [data-provider="github"] .cl-providerIcon img {
+      filter: invert(1) brightness(100) !important;
+    }
+
+    /* ── Twitter/X: black → white ── */
+    .cl-socialButtonsIconButton[data-provider="twitter"] svg,
+    .cl-socialButtonsIconButton[data-provider="x"] svg,
+    .cl-socialButtonsBlockButton[data-provider="twitter"] svg,
+    .cl-socialButtonsBlockButton[data-provider="x"] svg {
+      filter: invert(1) brightness(100) !important;
+    }
+
+    /* ── Google / Microsoft: already colorful, leave as-is ── */
+    .cl-socialButtonsIconButton[data-provider="google"] svg,
+    .cl-socialButtonsBlockButton[data-provider="google"] svg,
+    .cl-socialButtonsIconButton[data-provider="microsoft"] svg,
+    .cl-socialButtonsBlockButton[data-provider="microsoft"] svg {
+      filter: none !important;
+    }
+
+
+    /* Divider */
+    .cl-dividerLine { background: rgba(255,255,255,0.1) !important; }
+    .cl-dividerText { color: #64748b !important; background: transparent !important; font-family: 'Inter', sans-serif !important; }
+
+    /* Form labels */
+    .cl-formFieldLabel, .cl-label {
+      color: #cbd5e1 !important; font-family: 'Inter', sans-serif !important;
+      font-weight: 500 !important; font-size: 0.84rem !important;
+    }
+
+    /* Inputs — sign-up has many (name, username, email, phone, password) */
+    .cl-formFieldInput,
+    .cl-selectButton,
+    .cl-phoneInputBox {
+      background: rgba(255,255,255,0.07) !important;
+      border: 1px solid rgba(255,255,255,0.14) !important;
+      border-radius: 10px !important;
+      color: #f1f5f9 !important;
+      font-family: 'Inter', sans-serif !important;
+      font-size: 0.9rem !important;
+      caret-color: #06b6d4 !important;
+    }
+    .cl-formFieldInput:focus, .cl-formFieldInput:focus-within {
+      border-color: rgba(6,182,212,0.6) !important;
+      background: rgba(6,182,212,0.08) !important;
+      box-shadow: 0 0 0 3px rgba(6,182,212,0.12) !important;
+      outline: none !important;
+    }
+    .cl-formFieldInput::placeholder { color: #475569 !important; }
+    .cl-formFieldAction, .cl-formFieldHintText { color: #06b6d4 !important; }
+
+    /* Primary button */
+    .cl-formButtonPrimary {
+      background: linear-gradient(135deg, #06b6d4, #8b5cf6) !important;
+      border: none !important; border-radius: 10px !important;
+      font-family: 'Inter', sans-serif !important; font-weight: 700 !important;
+      font-size: 0.92rem !important; transition: opacity 0.2s, transform 0.2s !important;
+      box-shadow: 0 4px 20px rgba(6,182,212,0.3) !important;
+    }
+    .cl-formButtonPrimary:hover { opacity: 0.9 !important; transform: translateY(-1px) !important; }
+
+    /* Errors */
+    .cl-formFieldErrorText, .cl-formResendCodeLink { color: #f87171 !important; }
+    .cl-alertText { color: #fbbf24 !important; }
+
+    /* Footer — dark */
+    .cl-footer, .cl-footerAction, .cl-footerPages, .cl-footerPagesLink {
+      background: rgba(12, 12, 24, 0.9) !important;
+      border-top: 1px solid rgba(255,255,255,0.07) !important;
+    }
+    .cl-footerActionText {
+      color: #64748b !important; font-family: 'Inter', sans-serif !important; font-size: 0.82rem !important;
+    }
+    .cl-footerActionLink {
+      color: #06b6d4 !important; font-weight: 600 !important; font-family: 'Inter', sans-serif !important;
+    }
+    .cl-footerActionLink:hover { color: #8b5cf6 !important; }
+
+    /* "Secured by Clerk" strip */
+    .cl-branded, .cl-footerBranded, [class*="cl-powered"], [class*="cl-footer__"] {
+      background: rgba(12, 12, 24, 0.9) !important;
+      border-top: 1px solid rgba(255,255,255,0.05) !important;
+    }
+    .cl-branded * { color: #475569 !important; }
+    .cl-branded a { color: #6366f1 !important; }
+
+    /* Alert box */
+    .cl-alert {
+      background: rgba(251,191,36,0.08) !important;
+      border: 1px solid rgba(251,191,36,0.2) !important;
+      border-radius: 8px !important; color: #fbbf24 !important;
+    }
+
+    /* OTP inputs */
+    .cl-otpCodeFieldInput {
+      background: rgba(255,255,255,0.07) !important;
+      border: 1px solid rgba(255,255,255,0.14) !important;
+      color: #f1f5f9 !important; border-radius: 8px !important;
+    }
+    .cl-otpCodeFieldInput:focus {
+      border-color: rgba(6,182,212,0.6) !important;
+      box-shadow: 0 0 0 3px rgba(6,182,212,0.12) !important;
+    }
+
+    /* Password toggle */
+    .cl-formFieldInputShowPasswordButton { color: #64748b !important; }
+    .cl-formFieldInputShowPasswordButton:hover { color: #06b6d4 !important; }
+
+    /* Phone input / select dropdown */
+    .cl-phoneInputBox { padding: 0 !important; }
+    .cl-selectSearchInput {
+      background: rgba(255,255,255,0.05) !important;
+      color: #f1f5f9 !important; border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+    }
+    .cl-selectOption:hover { background: rgba(6,182,212,0.1) !important; }
+    .cl-selectOptionText { color: #e2e8f0 !important; }
+
+    /* Catch-all text */
+    .cl-card p, .cl-card span, .cl-card label { color: #cbd5e1 !important; }
+
+    /* Fallback */
+    .auth-fallback { text-align: center; padding: 2.5rem; color: #94a3b8; font-size: 0.9rem; }
+    .auth-back { text-align: center; margin-top: 1.2rem; font-size: 0.78rem; color: #475569; }
+    .auth-back a { color: #64748b; text-decoration: none; transition: color 0.2s; }
+    .auth-back a:hover { color: #06b6d4; }
+  </style>
+</head>
+<body>
+
+  <main class="auth-page">
+    <div class="auth-card">
+
+      <!-- Brand -->
+      <div class="auth-brand">
+        <img src="{{ url_for('static', filename='logo.jpg') }}" alt="SatyaX" class="auth-brand-logo" />
+        <div class="auth-brand-name">Satya<span>X</span></div>
+        <div class="auth-brand-tag">AI-Powered Fact Verification</div>
+      </div>
+
+      <!-- Perks strip -->
+      <div class="auth-perks">
+        <div class="auth-perk"><span>⚡</span><span>Unlimited fact verifications</span></div>
+        <div class="auth-perk"><span>📊</span><span>Personal analysis dashboard & history</span></div>
+        <div class="auth-perk"><span>🔗</span><span>Shareable verification reports</span></div>
+        <div class="auth-perk"><span>📄</span><span>PDF report exports</span></div>
+      </div>
+
+      <!-- Auth box -->
+      <div class="auth-box">
+        {% if clerk_pk %}
+          <div id="clerk-sign-up"></div>
+        {% else %}
+          <div class="auth-fallback">
+            <p style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:0.5rem">⚙️ Auth Not Configured</p>
+            <p>Add <code>CLERK_PUBLISHABLE_KEY</code> to your <code>.env</code> file.</p>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="auth-back"><a href="/">← Back to SatyaX</a></div>
+    </div>
+  </main>
+
+  <script src="{{ url_for('static', filename='auth.js') }}"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      {% if clerk_pk %}
+      mountSignUp('clerk-sign-up');
+      waitForClerk().then(clerk => {
+        if (clerk.user) window.location.href = '/dashboard';
+      }).catch(() => {});
+      {% endif %}
+    });
+  </script>
+</body>
+</html>

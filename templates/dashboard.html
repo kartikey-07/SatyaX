@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — SatyaX</title>
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  {% if clerk_frontend %}
+  <script async crossorigin="anonymous"
+    data-clerk-publishable-key="{{ clerk_pk }}"
+    src="{{ clerk_frontend }}/npm/@clerk/clerk-js@5/dist/clerk.browser.js">
+  </script>
+  {% endif %}
+
+  <style>
+    /* ── Dashboard Layout ── */
+    .dash-page { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
+    .dash-header { margin-bottom: 2.5rem; }
+    .dash-welcome { display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap; }
+    .dash-avatar {
+      width: 60px; height: 60px; border-radius: 50%; object-fit: cover;
+      border: 2px solid rgba(139,92,246,0.4);
+      box-shadow: 0 0 20px rgba(139,92,246,0.2);
+      background: var(--surface);
+    }
+    .dash-avatar-placeholder {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; font-weight: 800; color: white;
+      border: 2px solid rgba(139,92,246,0.4);
+      box-shadow: 0 0 20px rgba(139,92,246,0.2);
+      flex-shrink: 0;
+    }
+    .dash-welcome-text h1 {
+      font-size: 1.6rem; font-weight: 800; color: var(--text);
+      letter-spacing: -0.02em; margin-bottom: 0.2rem;
+    }
+    .dash-welcome-text p { font-size: 0.85rem; color: var(--text-dim); }
+    .dash-role-badge {
+      font-size: 0.68rem; font-weight: 700; padding: 0.2rem 0.65rem;
+      border-radius: 99px; text-transform: uppercase; letter-spacing: 0.08em;
+      background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3);
+      color: var(--context); margin-left: 0.5rem;
+    }
+    .dash-role-badge.admin {
+      background: rgba(251,191,36,0.15); border-color: rgba(251,191,36,0.3);
+      color: #fbbf24;
+    }
+
+    /* ── Stat Cards ── */
+    .dash-stats {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.85rem; margin-bottom: 2.5rem;
+    }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.2rem 1.4rem;
+      transition: all var(--transition);
+      position: relative; overflow: hidden;
+    }
+    .stat-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--accent-cyan));
+      opacity: 0; transition: opacity var(--transition);
+    }
+    .stat-card:hover { background: var(--surface-hover); border-color: rgba(139,92,246,0.3); }
+    .stat-card:hover::before { opacity: 1; }
+    .stat-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 0.5rem; }
+    .stat-value { font-size: 2rem; font-weight: 900; color: var(--text); line-height: 1; }
+    .stat-sub { font-size: 0.72rem; color: var(--text-dim); margin-top: 0.35rem; }
+    .stat-icon { font-size: 1.2rem; float: right; opacity: 0.4; margin-top: -0.2rem; }
+
+    /* ── Dashboard Sections ── */
+    .dash-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.2rem;
+      align-items: start;
+    }
+    @media (max-width: 850px) { .dash-grid { grid-template-columns: 1fr; } }
+    .dash-main-col, .dash-side-col {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+    .dash-section {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.4rem;
+      margin-bottom: 0;
+    }
+    .dash-section-full { grid-column: 1 / -1; }
+    .dash-section-title {
+      font-size: 0.82rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 1rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .dash-section-title a {
+      font-size: 0.72rem; color: var(--accent-cyan); text-decoration: none; text-transform: none; letter-spacing: 0;
+    }
+
+    /* ── Quick Actions ── */
+    .quick-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+    .qa-btn {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.55rem 1rem; border-radius: 8px;
+      font-size: 0.82rem; font-weight: 600; text-decoration: none;
+      transition: all var(--transition); border: 1px solid var(--border);
+      background: var(--surface-hover); color: var(--text);
+    }
+    .qa-btn:hover { border-color: var(--primary); background: rgba(139,92,246,0.1); color: var(--context); }
+    .qa-btn.primary {
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      border-color: transparent; color: white;
+    }
+    .qa-btn.primary:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    /* ── History Table ── */
+    .history-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .history-item {
+      display: flex; align-items: center; gap: 0.85rem;
+      padding: 0.7rem 0.85rem; border-radius: 8px;
+      background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+      transition: background var(--transition); cursor: default;
+    }
+    .history-item:hover { background: var(--surface-hover); }
+    .hi-badge {
+      font-size: 0.65rem; font-weight: 800; padding: 0.15rem 0.5rem;
+      border-radius: 4px; text-transform: uppercase; flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .hi-badge.REAL     { background: var(--real-bg); color: var(--real); border: 1px solid var(--real-border); }
+    .hi-badge.FAKE     { background: var(--fake-bg); color: var(--fake); border: 1px solid var(--fake-border); }
+    .hi-badge.MISLEADING { background: var(--misleading-bg); color: var(--misleading); border: 1px solid var(--misleading-border); }
+    .hi-badge.PARTIALLY_TRUE { background: var(--partial-bg); color: var(--partial); border: 1px solid var(--partial-border); }
+    .hi-badge.CONTEXT_NEEDED { background: var(--context-bg); color: var(--context); border: 1px solid var(--context-border); }
+    .hi-badge.UNVERIFIED { background: var(--unverified-bg); color: var(--unverified); border: 1px solid var(--unverified-border); }
+    .hi-text { font-size: 0.82rem; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hi-score { font-size: 0.75rem; font-weight: 700; color: var(--text-dim); flex-shrink: 0; }
+    .hi-date  { font-size: 0.7rem; color: var(--text-dim); flex-shrink: 0; }
+    .empty-state { text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.85rem; }
+    .empty-state a { color: var(--accent-cyan); text-decoration: none; }
+
+    /* ── Saved Reports ── */
+    .saved-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .saved-item {
+      display: flex; align-items: center; gap: 0.85rem;
+      padding: 0.7rem 0.85rem; border-radius: 8px;
+      background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+      text-decoration: none;
+      transition: background var(--transition);
+    }
+    .saved-item:hover { background: var(--surface-hover); }
+    .si-id { font-size: 0.7rem; font-weight: 700; color: var(--accent-cyan); font-family: monospace; flex-shrink: 0; }
+    .si-text { font-size: 0.82rem; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .si-score { font-size: 0.75rem; font-weight: 700; color: var(--text-dim); flex-shrink: 0; }
+
+    /* ── Profile Summary ── */
+    .profile-summary { display: flex; align-items: center; gap: 1rem; }
+    .ps-avatar {
+      width: 48px; height: 48px; border-radius: 50%; object-fit: cover;
+      border: 2px solid var(--border); flex-shrink: 0;
+    }
+    .ps-info p { font-size: 0.88rem; color: var(--text); font-weight: 600; margin-bottom: 0.15rem; }
+    .ps-info span { font-size: 0.75rem; color: var(--text-dim); }
+    .ps-manage { margin-top: 1rem; }
+    .ps-manage a {
+      font-size: 0.8rem; color: var(--accent-cyan); text-decoration: none;
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      padding: 0.4rem 0.85rem; border: 1px solid rgba(6,182,212,0.3);
+      border-radius: 8px; transition: all var(--transition);
+    }
+    .ps-manage a:hover { background: rgba(6,182,212,0.07); }
+  </style>
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <a href="/" style="display:flex;align-items:center;gap:0.6rem;text-decoration:none">
+          <img src="{{ url_for('static', filename='logo.jpg') }}" alt="SatyaX" class="logo-img" />
+          <span class="logo-text">Satya<span class="logo-accent">X</span></span>
+        </a>
+      </div>
+      <nav style="margin-left:auto;display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+        <a href="/" style="font-size:0.78rem;color:var(--text-dim);text-decoration:none;padding:0.3rem 0.75rem;border:1px solid var(--border);border-radius:99px">← Verify</a>
+        <a href="/history" style="font-size:0.78rem;color:var(--text-dim);text-decoration:none;padding:0.3rem 0.75rem;border:1px solid var(--border);border-radius:99px">History</a>
+        <a href="/dashboard" style="font-size:0.78rem;color:var(--accent-cyan);text-decoration:none;padding:0.3rem 0.75rem;border:1px solid rgba(6,182,212,0.3);border-radius:99px;background:rgba(6,182,212,0.07)">Dashboard</a>
+
+        <!-- Auth nav (filled by auth.js) -->
+        <div id="nav-signed-in" style="display:none;align-items:center;gap:0.5rem">
+          <a href="/profile" style="display:flex;align-items:center;gap:0.4rem;text-decoration:none">
+            <img id="nav-avatar" src="" alt="Profile" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--border);" />
+            <span id="nav-username" style="font-size:0.78rem;color:var(--text-muted)"></span>
+          </a>
+          <button onclick="satyaxSignOut()" title="Sign out" style="font-size:0.75rem;font-weight:600;color:#f87171;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:99px;padding:0.32rem 0.8rem;cursor:pointer;white-space:nowrap;transition:all 0.2s;font-family:inherit;" onmouseover="this.style.background='rgba(239,68,68,0.16)';this.style.borderColor='rgba(239,68,68,0.5)';this.style.color='#fca5a5'" onmouseout="this.style.background='rgba(239,68,68,0.08)';this.style.borderColor='rgba(239,68,68,0.25)';this.style.color='#f87171'">Sign Out</button>
+          <a id="nav-admin-link" href="/admin" style="display:none;font-size:0.72rem;color:#fbbf24;text-decoration:none;padding:0.28rem 0.65rem;border:1px solid rgba(251,191,36,0.3);border-radius:99px;background:rgba(251,191,36,0.07)">Admin</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ── Dashboard ── -->
+  <main class="dash-page">
+
+    <!-- Welcome -->
+    <div class="dash-header">
+      <div class="dash-welcome">
+        <div class="dash-avatar-placeholder" id="dash-avatar-placeholder">?</div>
+        <img id="dash-avatar-img" src="" alt="Avatar" class="dash-avatar" style="display:none" />
+        <div class="dash-welcome-text">
+          <h1>Welcome back, <span id="dash-username">there</span>!
+            <span class="dash-role-badge" id="dash-role-badge" style="display:none"></span>
+          </h1>
+          <p id="dash-email" style="color:var(--text-dim);font-size:0.82rem"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="dash-stats">
+      <div class="stat-card">
+        <div class="stat-icon">🔬</div>
+        <div class="stat-label">Total Analyses</div>
+        <div class="stat-value" id="stat-total">—</div>
+        <div class="stat-sub">All time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-label">Avg Truth Score</div>
+        <div class="stat-value" id="stat-avg">—</div>
+        <div class="stat-sub">Credibility average</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📄</div>
+        <div class="stat-label">Saved Reports</div>
+        <div class="stat-value" id="stat-saved">0</div>
+        <div class="stat-sub">In database</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🔗</div>
+        <div class="stat-label">Shared Links</div>
+        <div class="stat-value" id="stat-shared">0</div>
+        <div class="stat-sub">Publicly shared</div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="dash-section dash-section-full" style="margin-bottom:1.2rem">
+      <div class="dash-section-title">Quick Actions</div>
+      <div class="quick-actions">
+        <a href="/" class="qa-btn primary">⚡ Verify Content</a>
+        <a href="/history" class="qa-btn">📋 View History</a>
+        <a href="/profile" class="qa-btn">👤 Profile</a>
+        <a href="/methodology" class="qa-btn">🔬 Methodology</a>
+        <a href="/how-it-works" class="qa-btn">ℹ️ How It Works</a>
+      </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="dash-grid">
+      
+      <div class="dash-main-col">
+        <!-- Recent Analyses -->
+        <div class="dash-section">
+          <div class="dash-section-title">
+            Recent Analyses
+            <a href="/history">View all →</a>
+          </div>
+          <div class="history-list" id="dash-history">
+            <div class="empty-state">Loading…</div>
+          </div>
+        </div>
+
+        <!-- Saved Reports -->
+        <div class="dash-section">
+          <div class="dash-section-title">
+            Saved Reports
+            <a href="/saved-reports">View all →</a>
+          </div>
+          <div class="saved-list" id="dash-saved">
+            <div class="empty-state">Loading…</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-side-col">
+        <!-- Profile Summary -->
+        <div class="dash-section">
+          <div class="dash-section-title">Your Profile</div>
+          <div class="profile-summary">
+            <img id="ps-avatar" src="{{ url_for('static', filename='logo.jpg') }}" class="ps-avatar" alt="Avatar" />
+            <div class="ps-info">
+              <p id="ps-name">Loading…</p>
+              <span id="ps-email">…</span>
+            </div>
+          </div>
+          <div class="ps-manage">
+            <a href="/profile">⚙️ Manage Account</a>
+          </div>
+        </div>
+
+        <!-- Stats Breakdown -->
+        <div class="dash-section">
+          <div class="dash-section-title">Verdict Distribution</div>
+          <div id="verdict-dist" style="display:flex;flex-direction:column;gap:0.45rem"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <img src="{{ url_for('static', filename='logo_1.jpg') }}" alt="SatyaX" class="footer-logo-img" />
+        <p class="footer-motto">Smart evidence. Transparent reasoning. Better decisions.</p>
+      </div>
+      <nav class="footer-links">
+        <a href="/">Home</a><a href="/methodology">Methodology</a>
+        <a href="/history">History</a><a href="/faq">FAQ</a>
+      </nav>
+      <p class="footer-copy">&copy; 2026 SatyaX. Powered by BERT + Gemini AI + DuckDuckGo.</p>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='auth.js') }}"></script>
+  <script>
+    // ── Populate dashboard from Clerk user + localStorage history ──
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Load user info
+      try {
+        const clerk = await waitForClerk();
+        const user = clerk.user;
+        if (!user) { window.location.href = '/sign-in'; return; }
+
+        const name = user.firstName || user.primaryEmailAddress?.emailAddress?.split('@')[0] || 'User';
+        const email = user.primaryEmailAddress?.emailAddress || '';
+        const avatar = user.imageUrl || '';
+        const role = user.publicMetadata?.role || 'user';
+
+        document.getElementById('dash-username').textContent = name;
+        document.getElementById('dash-email').textContent = email;
+        document.getElementById('ps-name').textContent = user.fullName || name;
+        document.getElementById('ps-email').textContent = email;
+
+        if (avatar) {
+          document.getElementById('dash-avatar-img').src = avatar;
+          document.getElementById('dash-avatar-img').style.display = 'block';
+          document.getElementById('dash-avatar-placeholder').style.display = 'none';
+          document.getElementById('ps-avatar').src = avatar;
+        } else {
+          document.getElementById('dash-avatar-placeholder').textContent = name.charAt(0).toUpperCase();
+        }
+
+        const roleEl = document.getElementById('dash-role-badge');
+        roleEl.textContent = role.toUpperCase();
+        roleEl.style.display = 'inline-block';
+        if (role === 'admin') roleEl.classList.add('admin');
+
+      } catch (e) { /* Clerk not configured */ }
+
+      // Load history from localStorage
+      const historyEl = document.getElementById('dash-history');
+      const verdictEl = document.getElementById('verdict-dist');
+      let history = [];
+      try {
+        history = JSON.parse(localStorage.getItem('pramanaai_history') || '[]');
+      } catch { history = []; }
+
+      document.getElementById('stat-total').textContent = history.length;
+
+      if (history.length === 0) {
+        historyEl.innerHTML = '<div class="empty-state">No analyses yet.<br><a href="/">Start verifying →</a></div>';
+      } else {
+        // Avg truth score
+        const scores = history.filter(h => h.truth_score != null).map(h => h.truth_score);
+        document.getElementById('stat-avg').textContent = scores.length
+          ? Math.round(scores.reduce((a,b) => a+b, 0) / scores.length)
+          : '—';
+
+        // Recent 5
+        const recent = history.slice(0, 5);
+        historyEl.innerHTML = recent.map(h => `
+          <div class="history-item">
+            <span class="hi-badge ${h.verdict || 'UNVERIFIED'}">${(h.verdict||'?').replace('_',' ')}</span>
+            <span class="hi-text">${escHtml(h.title ? h.title.slice(0,80) : 'N/A')}</span>
+            <span class="hi-score">${h.truth_score ?? '?'}/100</span>
+          </div>
+        `).join('');
+
+        // Verdict distribution
+        const counts = {};
+        history.forEach(h => { const v = h.verdict||'UNVERIFIED'; counts[v] = (counts[v]||0)+1; });
+        const total = history.length;
+        verdictEl.innerHTML = Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([v, c]) => `
+          <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.78rem">
+            <span class="hi-badge ${v}" style="min-width:80px;text-align:center">${v.replace('_',' ')}</span>
+            <div style="flex:1;height:6px;background:var(--border);border-radius:3px">
+              <div style="height:100%;border-radius:3px;background:linear-gradient(90deg,var(--primary),var(--accent-cyan));width:${Math.round(c/total*100)}%"></div>
+            </div>
+            <span style="color:var(--text-dim);min-width:20px">${c}</span>
+          </div>
+        `).join('');
+      }
+
+      // Load saved reports from API
+      loadSavedReports();
+    });
+
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    async function loadSavedReports() {
+      const el = document.getElementById('dash-saved');
+      try {
+        const token = await getAuthToken();
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const resp = await fetch('/api/my-reports', { headers });
+        if (!resp.ok) throw new Error('Not authed');
+        const data = await resp.json();
+        const reports = data.reports || [];
+        document.getElementById('stat-saved').textContent = reports.length;
+        document.getElementById('stat-shared').textContent = reports.filter(r => r.shared).length;
+
+        if (reports.length === 0) {
+          el.innerHTML = '<div class="empty-state">No saved reports yet.<br><a href="/">Run a verification →</a></div>';
+        } else {
+          el.innerHTML = reports.slice(0,5).map(r => `
+            <a href="/report/${r.report_id}" class="saved-item">
+              <span class="si-id">${r.report_id}</span>
+              <span class="si-text">${escHtml((r.input_text||'').slice(0,60))}</span>
+              <span class="si-score">${r.truth_score ?? '?'}/100</span>
+            </a>
+          `).join('');
+        }
+      } catch {
+        el.innerHTML = '<div class="empty-state">Reports visible after setup.</div>';
+      }
+    }
+  </script>
+</body>
+</html>

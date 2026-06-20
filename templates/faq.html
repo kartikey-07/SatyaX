@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FAQ — SatyaX</title>
+  <meta name="description" content="Frequently asked questions about SatyaX — AI-Powered Fact Verification & Misinformation Analysis Platform." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <style>
+    .faq-header {
+      background: rgba(8,13,26,0.85); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 1.2rem 2rem;
+      display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
+    }
+    .faq-logo { font-size: 1.35rem; font-weight: 900; color: var(--text); }
+    .faq-logo span { color: var(--accent-cyan); }
+    .faq-container { max-width: 780px; margin: 0 auto; padding: 3rem 1.5rem; }
+    .faq-hero { text-align: center; margin-bottom: 3rem; }
+    .faq-hero h1 {
+      font-size: 2.2rem; font-weight: 900; letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #f1f5f9, #8b5cf6);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom: 0.75rem;
+    }
+    .faq-hero p { font-size: 0.95rem; color: var(--text-muted); }
+
+    .faq-item {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-bottom: 0.75rem;
+      overflow: hidden; transition: border-color 0.2s;
+    }
+    .faq-item:hover { border-color: rgba(139,92,246,0.25); }
+    .faq-q {
+      padding: 1.1rem 1.5rem;
+      display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer; gap: 1rem;
+    }
+    .faq-q-text { font-size: 0.92rem; font-weight: 600; color: var(--text); }
+    .faq-chevron { color: var(--text-dim); font-size: 0.85rem; flex-shrink: 0; transition: transform 0.25s; }
+    .faq-item.open .faq-chevron { transform: rotate(180deg); }
+    .faq-a {
+      display: none;
+      padding: 0 1.5rem 1.2rem;
+      font-size: 0.87rem; color: var(--text-muted); line-height: 1.75;
+      border-top: 1px solid var(--border);
+      margin: 0 1.5rem;
+      padding-top: 1rem;
+    }
+    .faq-item.open .faq-a { display: block; }
+    .faq-a a { color: var(--accent-cyan); text-decoration: none; }
+    .faq-a a:hover { text-decoration: underline; }
+
+    .faq-section-title {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-dim);
+      margin: 2rem 0 0.75rem;
+    }
+    .footer-bar {
+      background: var(--surface); border-top: 1px solid var(--border);
+      padding: 1.5rem 2rem; text-align: center;
+      font-size: 0.75rem; color: var(--text-dim);
+    }
+    .footer-bar a { color: var(--text-muted); text-decoration: none; margin: 0 0.5rem; }
+    .footer-bar a:hover { color: var(--accent-cyan); }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="faq-header">
+    <div class="faq-logo">⚡ Satya<span>X</span></div>
+    <nav style="display:flex;gap:0.5rem;margin-left:auto;flex-wrap:wrap;">
+      <a href="/" class="header-nav-link">← Verify</a>
+      <a href="/how-it-works" class="header-nav-link">How It Works</a>
+      <a href="/methodology" class="header-nav-link">Methodology</a>
+      <a href="/history" class="header-nav-link">History</a>
+    </nav>
+  </header>
+
+  <main class="faq-container">
+
+    <div class="faq-hero">
+      <h1>Frequently Asked Questions</h1>
+      <p>Everything you need to know about how SatyaX works.</p>
+    </div>
+
+    <!-- General -->
+    <div class="faq-section-title">General</div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">
+        <span class="faq-q-text">What is SatyaX?</span>
+        <span class="faq-chevron">▼</span>
+      </div>
+      <div class="faq-a">
+        SatyaX is an AI-powered fact verification and misinformation analysis platform.
+        It combines BERT-based linguistic analysis, real-time web evidence retrieval,
+        source reliability scoring, and Google Gemini AI reasoning to evaluate the
+        credibility of articles, headlines, URLs, and online claims.
+      </div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">
+        <span class="faq-q-text">Is SatyaX a replacement for professional fact-checking?</span>
+        <span class="faq-chevron">▼</span>
+      </div>
+      <div class="faq-a">
+        No. SatyaX is an AI-assisted tool that provides a rapid first-pass assessment.
+        AI systems can make errors, especially for recent events, niche topics, or content
+        that requires domain expertise. Always cross-reference critical claims with multiple
+        trusted primary sources and professional fact-checkers.
+      </div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">
+        <span class="faq-q-text">What types of content can SatyaX analyze?</span>
+        <span class="faq-chevron">▼</span>
+      </div>
+      <div class="faq-a">
+        SatyaX can analyze:
+        <br/>• News article text (pasted directly)
+        <br/>• Headlines and short claims
+        <br/>• Social media posts
+        <br/>• News article URLs (auto-scrapes the full text)
+        <br/>• Generated satirical content (Comedy Generator output)
+      </div>
+    </div>
+
+    <!-- Analysis -->
+    <div class="faq-section-title">Analysis &amp; Results</div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">
+        <span class="faq-q-text">What does the Truth Score mean?</span>
+        <span class="faq-chevron">▼</span>
+      </div>
+      <div class="faq-a">
+        The Truth Score (0–100) represents the AI's overall credibility assessment:
+        <br/>• <strong>90–100</strong>: Highly accurate, strongly supported by evidence
+        <br/>• <strong>70–89</strong>: Mostly accurate with minor gaps
+        <br/>• <strong>50–69</strong>: Mixed — some claims verified, others not
+        <br/>• <strong>30–49</strong>: Low accuracy — significant issues found
+        <br/>• <strong>0–29</strong>: Very low accuracy — content appears largely false
+      </div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">
+        <span class="faq-q-text">Why does BERT sometimes disagree with Gemini?</span>
+        <span class="faq-chevron">▼</span>
+      </div>
+      <div class="faq-a">
+        BERT is a writing style detector — not a fact-checker. It was trained on 40,000+
+        articles and learned to recognize <em>how</em> fake news is written (sensational, clickbait)
+        vs real news (formal, structured). It has no world knowledge. Gemini AI, on the other hand,
+        reasons about factual content using its training data and the web search results.
+        When they disagree, <strong>Gemini's verdict takes priority</strong>. BERT's output
+        is supplementary context about writing style only.
+      </div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">
+        <span class="faq-q-text">What is the difference between MISLEADING and CONTEXT NEEDED?</span>
+        <span class="faq-chevron">▼</span>
+      </div>
+      <div class="faq-a">
+        <strong>MISLEADING</strong>: The content is technically true but intentionally framed to distort
+        reality, omit crucial facts, or create a false impression in the reader's mind.
+        <br/><br/>
+        <strong>CONTEXT NEEDED</strong>: The content is accurate but incomplete — a reader without
+        the necessary background context would likely misunderstand its significance.
+        There is no deceptive intent implied.
+      </div>
+    </div>
+
+    <!-- URL Scraping -->
+    <div class="faq-section-title">URL Analysis</div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">
+        <span class="faq-q-text">Why can't SatyaX extract articles from Reuters or NYT?</span>
+        <span class="faq-chevron">▼</span>
+      </div>
+      <div class="faq-a">
+        High-tier publishers (Reuters, NYT, WSJ, Bloomberg) use advanced bot-protection systems
+        (Imperva, Cloudflare, TLS fingerprinting) that block all automated scrapers. Even our
+        5-layer fallback pipeline cannot bypass these protections reliably.
+        <br/><br/>
+        <strong>Workaround</strong>: When extraction fails, SatyaX shows you direct links to
+        Google Cache and Archive.org versions of the article. Copy the text from there and
+        paste it into the text input to analyze it.
+      </div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">
+        <span class="faq-q-text">What are the 5 layers of URL extraction?</span>
+        <span class="faq-chevron">▼</span>
+      </div>
+      <div class="faq-a">
+        SatyaX tries each layer in sequence, stopping when one succeeds:
+        <br/>1. <strong>Trafilatura</strong> — High-precision content extraction (primary)
+        <br/>2. <strong>newspaper3k</strong> — News-site optimised extractor
+        <br/>3. <strong>BeautifulSoup</strong> — Raw HTML paragraph extraction
+        <br/>4. <strong>Google Cache</strong> — Cached version for bot-protected sites
+        <br/>5. <strong>Archive.org</strong> — Wayback Machine snapshot for paywalled content
+        <br/><br/>When a fallback layer is used, an amber notice is shown in the results.
+      </div>
+    </div>
+
+    <!-- Reports -->
+    <div class="faq-section-title">Reports &amp; History</div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">
+        <span class="faq-q-text">How do I share a verification result?</span>
+        <span class="faq-chevron">▼</span>
+      </div>
+      <div class="faq-a">
+        After any analysis, click the <strong>Share Result</strong> button in the action bar.
+        SatyaX saves the result to the server database and generates a unique shareable URL
+        (e.g. <code>/report/SX-A82KQ1</code>). Copy the link and share it with anyone —
+        no account needed to view it.
+      </div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">
+        <span class="faq-q-text">Where is my analysis history stored?</span>
+        <span class="faq-chevron">▼</span>
+      </div>
+      <div class="faq-a">
+        Analysis history is stored in your browser's <strong>localStorage</strong> — it is
+        private to your browser and not sent to any server unless you explicitly click
+        "Share Result." History is available at <a href="/history">/history</a>.
+        It persists across sessions but is cleared if you clear your browser data.
+        Up to 20 analyses are kept; older ones are auto-removed.
+      </div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">
+        <span class="faq-q-text">How do I download a PDF verification report?</span>
+        <span class="faq-chevron">▼</span>
+      </div>
+      <div class="faq-a">
+        Click <strong>Download PDF</strong> in the post-analysis action bar. SatyaX generates
+        a professional 8-section PDF report including the verdict, truth score, writing style
+        analysis, extracted claims, evidence sources, and AI reasoning. The file is named
+        <code>SatyaX_Report_SX-XXXXXX.pdf</code>.
+      </div>
+    </div>
+
+    <!-- Privacy -->
+    <div class="faq-section-title">Privacy &amp; Data</div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">
+        <span class="faq-q-text">Does SatyaX store my submitted content?</span>
+        <span class="faq-chevron">▼</span>
+      </div>
+      <div class="faq-a">
+        Submitted content is <strong>not stored</strong> unless you click "Share Result."
+        If you share, the analysis result (including your input text) is saved to the SatyaX
+        database with a unique report ID. Shared reports are publicly accessible via their URL.
+        Your analysis history is kept only in your browser's localStorage.
+      </div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">
+        <span class="faq-q-text">Which AI models power SatyaX?</span>
+        <span class="faq-chevron">▼</span>
+      </div>
+      <div class="faq-a">
+        SatyaX uses:
+        <br/>• <strong>BERT</strong> (fine-tuned on ISOT/WELFake datasets) — Writing style analysis
+        <br/>• <strong>Google Gemini Flash</strong> (via REST API) — Deep fact verification and reasoning
+        <br/>• <strong>GPT-2</strong> — Comedy generator fallback when Gemini is unavailable
+        <br/>• <strong>DuckDuckGo News</strong> — Real-time web evidence retrieval (no API key needed)
+      </div>
+    </div>
+
+  </main>
+
+  <div class="footer-bar">
+    <a href="/">Home</a>
+    <a href="/how-it-works">How It Works</a>
+    <a href="/methodology">Methodology</a>
+    <a href="/history">History</a>
+    &nbsp;|&nbsp; &copy; 2026 SatyaX
+  </div>
+
+  <script>
+    function toggleFaq(el) {
+      el.classList.toggle('open');
+    }
+  </script>
+</body>
+</html>

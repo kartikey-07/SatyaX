@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recent Verifications — SatyaX</title>
+  <meta name="description" content="View previously analyzed articles, claims, and verification reports on SatyaX." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <style>
+    /* ── History page styles ── */
+    .hist-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1.2rem 2rem;
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    }
+    .hist-logo { font-size: 1.35rem; font-weight: 900; color: var(--text); }
+    .hist-logo span { color: var(--accent-cyan); }
+    .hist-container { max-width: 820px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+    /* Search & filter bar */
+    .hist-toolbar {
+      display: flex; gap: 0.75rem; align-items: center;
+      margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .hist-search {
+      flex: 1; min-width: 200px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0.6rem 1rem 0.6rem 2.4rem;
+      color: var(--text); font-size: 0.85rem; font-family: inherit;
+      outline: none; transition: border-color 0.2s;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.656a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: 0.7rem center;
+    }
+    .hist-search:focus { border-color: rgba(139,92,246,0.5); }
+
+    .hist-filter {
+      display: flex; gap: 0.4rem; flex-wrap: wrap;
+    }
+    .hf-btn {
+      font-size: 0.73rem; font-weight: 600; padding: 0.3rem 0.75rem;
+      border-radius: 99px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text-dim);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .hf-btn.active, .hf-btn:hover { border-color: rgba(139,92,246,0.4); color: var(--accent-purple); }
+    .hf-btn.active { background: rgba(139,92,246,0.1); }
+
+    .hist-actions {
+      margin-left: auto; display: flex; gap: 0.5rem;
+    }
+    .hist-clear-btn {
+      font-size: 0.75rem; font-weight: 600; padding: 0.35rem 0.8rem;
+      border-radius: 7px; border: 1px solid var(--fake-border);
+      background: none; color: var(--fake); cursor: pointer;
+      transition: all 0.2s;
+    }
+    .hist-clear-btn:hover { background: rgba(239,68,68,0.08); }
+
+    /* Count badge */
+    .hist-count {
+      font-size: 0.78rem; color: var(--text-dim); margin-bottom: 0.75rem;
+    }
+    .hist-count strong { color: var(--text-muted); }
+
+    /* History cards */
+    .hist-list { display: flex; flex-direction: column; gap: 0.65rem; }
+
+    .hist-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.75rem;
+      align-items: center;
+      transition: border-color 0.2s, transform 0.15s;
+      animation: fadeSlideIn 0.3s ease;
+    }
+    .hist-card:hover {
+      border-color: rgba(139,92,246,0.25);
+      transform: translateX(3px);
+    }
+    .hc-title {
+      font-size: 0.875rem; font-weight: 600; color: var(--text);
+      margin-bottom: 0.3rem;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 500px;
+    }
+    .hc-meta {
+      display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+    }
+    .hc-badge {
+      font-size: 0.68rem; font-weight: 700; padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+    }
+    .hc-score {
+      font-size: 0.73rem; color: var(--text-dim); font-weight: 500;
+    }
+    .hc-date { font-size: 0.72rem; color: var(--text-dim); margin-left: auto; }
+    .hc-actions {
+      display: flex; gap: 0.4rem; align-items: center; flex-shrink: 0;
+    }
+    .hca-btn {
+      font-size: 0.73rem; font-weight: 600;
+      padding: 0.3rem 0.7rem; border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface-hover); color: var(--text-muted);
+      cursor: pointer; transition: all 0.18s; text-decoration: none;
+    }
+    .hca-btn:hover { color: var(--text); border-color: rgba(139,92,246,0.3); }
+    .hca-del {
+      background: none; border: 1px solid transparent; color: var(--text-dim);
+    }
+    .hca-del:hover { color: var(--fake); border-color: var(--fake-border); }
+
+    /* Expanded detail panel */
+    .hist-detail {
+      background: rgba(0,0,0,0.15);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 var(--radius) var(--radius);
+      padding: 1.25rem 1.5rem;
+      margin-top: -0.65rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+      animation: fadeSlideIn 0.25s ease;
+    }
+    .hd-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .hd-item { }
+    .hd-lbl { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 0.2rem; }
+    .hd-val { font-size: 0.85rem; color: var(--text); font-weight: 600; }
+    .hd-text {
+      background: rgba(0,0,0,0.2); border-radius: 6px; padding: 0.75rem;
+      font-size: 0.8rem; max-height: 100px; overflow: auto;
+      border: 1px solid var(--border); margin-top: 0.5rem;
+    }
+
+    /* Empty state */
+    .hist-empty {
+      text-align: center; padding: 4rem 2rem;
+      display: flex; flex-direction: column; align-items: center; gap: 0.75rem;
+    }
+    .hist-empty-icon { font-size: 3rem; opacity: 0.4; }
+    .hist-empty-title { font-size: 1.1rem; font-weight: 700; color: var(--text-muted); }
+    .hist-empty-sub { font-size: 0.85rem; color: var(--text-dim); }
+    .hist-empty-btn {
+      margin-top: 0.5rem;
+      background: linear-gradient(135deg,#8b5cf6,#6366f1);
+      color: #fff; padding: 0.55rem 1.3rem; border-radius: 8px;
+      text-decoration: none; font-weight: 600; font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header class="hist-header">
+    <a href="/" style="display:flex;align-items:center;gap:0.6rem;text-decoration:none">
+      <img src="{{ url_for('static', filename='logo.jpg') }}" alt="SatyaX" style="width:30px;height:30px;border-radius:6px;object-fit:cover;" />
+      <div class="hist-logo">Satya<span>X</span></div>
+    </a>
+    <nav style="display:flex;gap:0.5rem;margin-left:auto">
+      <a href="/" style="font-size:0.78rem;color:var(--text-dim);text-decoration:none;padding:0.3rem 0.7rem;border:1px solid var(--border);border-radius:99px">← Verify</a>
+      <a href="/how-it-works" style="font-size:0.78rem;color:var(--text-dim);text-decoration:none;padding:0.3rem 0.7rem;border:1px solid var(--border);border-radius:99px">How It Works</a>
+      <a href="/methodology" style="font-size:0.78rem;color:var(--text-dim);text-decoration:none;padding:0.3rem 0.7rem;border:1px solid var(--border);border-radius:99px">Methodology</a>
+    </nav>
+  </header>
+
+  <main class="hist-container">
+
+    <h1 style="font-size:1.4rem;font-weight:800;color:var(--text);margin-bottom:0.3rem">Recent Verifications</h1>
+    <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:1.5rem">View previously analyzed articles, claims, and verification reports. Stored locally in this browser.</p>
+
+    <!-- ── Toolbar ── -->
+    <div class="hist-toolbar">
+      <input type="text" class="hist-search" id="searchBox" placeholder="Search analyses…" oninput="renderHistory()" />
+      <div class="hist-filter">
+        <button class="hf-btn active" data-verdict="ALL" onclick="setFilter('ALL',this)">All</button>
+        <button class="hf-btn" data-verdict="REAL" onclick="setFilter('REAL',this)" style="color:#10b981">✅ Real</button>
+        <button class="hf-btn" data-verdict="FAKE" onclick="setFilter('FAKE',this)" style="color:#ef4444">🚫 Fake</button>
+        <button class="hf-btn" data-verdict="MISLEADING" onclick="setFilter('MISLEADING',this)" style="color:#f59e0b">⚠️ Misleading</button>
+        <button class="hf-btn" data-verdict="UNVERIFIED" onclick="setFilter('UNVERIFIED',this)" style="color:#94a3b8">🔘 Unverified</button>
+      </div>
+      <div class="hist-actions">
+        <button class="hist-clear-btn" onclick="clearHistory()">🗑 Clear All</button>
+      </div>
+    </div>
+
+    <div id="histCount" class="hist-count"></div>
+
+    <!-- ── History List ── -->
+    <div id="histList" class="hist-list"></div>
+
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'pramanaai_history';
+    const VERDICT_STYLES = {
+      REAL:          { bg: 'rgba(16,185,129,0.15)',  color: '#10b981',  icon: '✅' },
+      FAKE:          { bg: 'rgba(239,68,68,0.15)',   color: '#ef4444',  icon: '🚫' },
+      MISLEADING:    { bg: 'rgba(245,158,11,0.15)',  color: '#f59e0b',  icon: '⚠️' },
+      PARTIALLY_TRUE:{ bg: 'rgba(249,115,22,0.15)',  color: '#f97316',  icon: '🔶' },
+      CONTEXT_NEEDED:{ bg: 'rgba(139,92,246,0.15)',  color: '#8b5cf6',  icon: '🔍' },
+      UNVERIFIED:    { bg: 'rgba(148,163,184,0.15)', color: '#94a3b8',  icon: '🔘' },
+    };
+
+    let currentFilter = 'ALL';
+    let expandedId    = null;
+
+    function getHistory() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+      catch(e) { return []; }
+    }
+
+    function saveHistory(items) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    }
+
+    function setFilter(verdict, btn) {
+      currentFilter = verdict;
+      document.querySelectorAll('.hf-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderHistory();
+    }
+
+    function deleteEntry(id) {
+      if (!confirm('Delete this analysis?')) return;
+      const items = getHistory().filter(e => e.id !== id);
+      saveHistory(items);
+      renderHistory();
+    }
+
+    function clearHistory() {
+      if (!confirm('Clear all analysis history? This cannot be undone.')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      renderHistory();
+    }
+
+    function toggleDetail(id) {
+      expandedId = expandedId === id ? null : id;
+      renderHistory();
+      if (expandedId) {
+        setTimeout(() => {
+          const el = document.getElementById('detail-' + id);
+          if (el) el.scrollIntoView({ behavior:'smooth', block:'nearest' });
+        }, 100);
+      }
+    }
+
+    function fmtDate(iso) {
+      try {
+        const d = new Date(iso);
+        return d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })
+               + ', ' + d.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+      } catch(e) { return iso; }
+    }
+
+    function renderHistory() {
+      const list = document.getElementById('histList');
+      const countEl = document.getElementById('histCount');
+      const search = (document.getElementById('searchBox').value || '').toLowerCase().trim();
+      let items = getHistory();
+
+      // Filter by verdict
+      if (currentFilter !== 'ALL') {
+        items = items.filter(e => (e.verdict || '').toUpperCase() === currentFilter);
+      }
+
+      // Filter by search
+      if (search) {
+        items = items.filter(e =>
+          (e.title || '').toLowerCase().includes(search) ||
+          (e.verdict || '').toLowerCase().includes(search) ||
+          (e.inputText || '').toLowerCase().includes(search)
+        );
+      }
+
+      countEl.innerHTML = items.length
+        ? `Showing <strong>${items.length}</strong> of <strong>${getHistory().length}</strong> analyses`
+        : '';
+
+      if (!items.length) {
+        list.innerHTML = `
+          <div class="hist-empty">
+            <div class="hist-empty-icon">📭</div>
+            <div class="hist-empty-title">${getHistory().length === 0 ? 'No analyses yet' : 'No matching results'}</div>
+            <div class="hist-empty-sub">
+              ${getHistory().length === 0
+                ? 'Run a fact-check on the main page and your analyses will appear here.'
+                : 'Try a different search term or filter.'}
+            </div>
+            ${getHistory().length === 0 ? '<a href="/" class="hist-empty-btn">Start Analyzing →</a>' : ''}
+          </div>`;
+        return;
+      }
+
+      list.innerHTML = items.map(entry => {
+        const v = (entry.verdict || 'UNVERIFIED').toUpperCase();
+        const vs = VERDICT_STYLES[v] || VERDICT_STYLES.UNVERIFIED;
+        const ts = entry.truth_score !== null && entry.truth_score !== undefined ? entry.truth_score : '—';
+        const g = entry.analysis?.gemini || {};
+        const isExpanded = expandedId === entry.id;
+
+        let detailHtml = '';
+        if (isExpanded) {
+          detailHtml = `
+            <div class="hist-detail" id="detail-${entry.id}">
+              <div class="hd-grid">
+                <div class="hd-item">
+                  <div class="hd-lbl">Verdict</div>
+                  <div class="hd-val" style="color:${vs.color}">${vs.icon} ${v.replace('_',' ')}</div>
+                </div>
+                <div class="hd-item">
+                  <div class="hd-lbl">Truth Score</div>
+                  <div class="hd-val">${ts}/100</div>
+                </div>
+                ${g.eli5_verdict ? `
+                <div class="hd-item" style="grid-column:1/-1">
+                  <div class="hd-lbl">AI Summary</div>
+                  <div style="font-style:italic;color:var(--text-muted);font-size:0.82rem">"${g.eli5_verdict}"</div>
+                </div>` : ''}
+              </div>
+              ${entry.inputText ? `
+              <div class="hd-lbl" style="margin-bottom:0.25rem">Input Text</div>
+              <div class="hd-text">${entry.inputText.substring(0, 350)}${entry.inputText.length > 350 ? '…' : ''}</div>` : ''}
+              ${entry.report_id ? `
+              <div style="margin-top:0.75rem;display:flex;gap:0.5rem">
+                <a href="/report/${entry.report_id}" class="hca-btn" style="font-size:0.75rem">🔗 View Report</a>
+                <a href="/export-pdf/${entry.report_id}" class="hca-btn" style="font-size:0.75rem;background:rgba(139,92,246,0.1);color:var(--accent-purple);border-color:rgba(139,92,246,0.3)">⬇ PDF</a>
+              </div>` : ''}
+            </div>`;
+        }
+
+        return `
+          <div>
+            <div class="hist-card" style="${isExpanded ? 'border-bottom:none;border-radius:var(--radius) var(--radius) 0 0;border-color:rgba(139,92,246,0.25)' : ''}">
+              <div>
+                <div class="hc-title" title="${(entry.title || '').replace(/"/g,'&quot;')}">${entry.title || '(No title)'}</div>
+                <div class="hc-meta">
+                  <span class="hc-badge" style="background:${vs.bg};color:${vs.color}">${vs.icon} ${v.replace('_',' ')}</span>
+                  ${ts !== '—' ? `<span class="hc-score">Score: ${ts}/100</span>` : ''}
+                  <span class="hc-date">${fmtDate(entry.timestamp)}</span>
+                </div>
+              </div>
+              <div class="hc-actions">
+                <button class="hca-btn" onclick="toggleDetail(${entry.id})">${isExpanded ? '▲ Hide' : '▼ View'}</button>
+                <button class="hca-btn hca-del" onclick="deleteEntry(${entry.id})" title="Delete">✕</button>
+              </div>
+            </div>
+            ${detailHtml}
+          </div>`;
+      }).join('');
+    }
+
+    // Init
+    renderHistory();
+  </script>
+</body>
+</html>

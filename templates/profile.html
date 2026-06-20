@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile — SatyaX</title>
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  {% if clerk_frontend %}
+  <script async crossorigin="anonymous"
+    data-clerk-publishable-key="{{ clerk_pk }}"
+    src="{{ clerk_frontend }}/npm/@clerk/clerk-js@5/dist/clerk.browser.js">
+  </script>
+  {% endif %}
+
+  <style>
+    .profile-page { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
+    .profile-hero {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 2rem;
+      display: flex; align-items: center; gap: 1.5rem;
+      margin-bottom: 1.5rem; flex-wrap: wrap;
+      position: relative; overflow: hidden;
+    }
+    .profile-hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(139,92,246,0.07), rgba(6,182,212,0.04));
+      pointer-events: none;
+    }
+    .profile-avatar-wrap { position: relative; flex-shrink: 0; }
+    .profile-avatar {
+      width: 88px; height: 88px; border-radius: 50%; object-fit: cover;
+      border: 3px solid rgba(139,92,246,0.4);
+      box-shadow: 0 0 30px rgba(139,92,246,0.25);
+      background: var(--surface-hover);
+    }
+    .profile-avatar-placeholder {
+      width: 88px; height: 88px; border-radius: 50%;
+      background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; font-weight: 900; color: white;
+      border: 3px solid rgba(139,92,246,0.4);
+      box-shadow: 0 0 30px rgba(139,92,246,0.25);
+    }
+    .profile-info { flex: 1; min-width: 200px; }
+    .profile-name {
+      font-size: 1.5rem; font-weight: 800; color: var(--text);
+      letter-spacing: -0.02em; margin-bottom: 0.3rem;
+    }
+    .profile-email { font-size: 0.88rem; color: var(--text-dim); margin-bottom: 0.5rem; }
+    .profile-meta { display: flex; gap: 0.85rem; flex-wrap: wrap; align-items: center; }
+    .profile-badge {
+      font-size: 0.68rem; font-weight: 700; padding: 0.22rem 0.65rem;
+      border-radius: 99px; text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .badge-user  { background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3); color: var(--context); }
+    .badge-admin { background: rgba(251,191,36,0.15); border: 1px solid rgba(251,191,36,0.3); color: #fbbf24; }
+    .profile-joined { font-size: 0.75rem; color: var(--text-dim); }
+    .profile-actions { display: flex; gap: 0.6rem; margin-top: 1rem; flex-wrap: wrap; }
+    .prof-btn {
+      font-size: 0.8rem; font-weight: 600; padding: 0.5rem 1rem;
+      border-radius: 8px; text-decoration: none; border: 1px solid var(--border);
+      background: var(--surface-hover); color: var(--text);
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      cursor: pointer; transition: all var(--transition); font-family: inherit;
+    }
+    .prof-btn:hover { border-color: var(--primary); background: rgba(139,92,246,0.1); color: var(--context); }
+    .prof-btn.danger:hover { border-color: var(--fake); background: var(--fake-bg); color: var(--fake); }
+
+    /* Grid */
+    .profile-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem;
+    }
+    @media (max-width: 620px) { .profile-grid { grid-template-columns: 1fr; } }
+    .profile-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.4rem;
+    }
+    .profile-card-full { grid-column: 1 / -1; }
+    .profile-card-title {
+      font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 1.2rem;
+    }
+
+    /* Info rows */
+    .info-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.6rem 0; border-bottom: 1px solid var(--border); font-size: 0.85rem;
+    }
+    .info-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .info-label { color: var(--text-dim); font-weight: 500; }
+    .info-value { color: var(--text); font-weight: 600; text-align: right; word-break: break-all; }
+
+    /* Clerk UserProfile mount */
+    #clerk-user-profile { min-height: 300px; }
+    .cl-rootBox { background: transparent !important; }
+    .cl-card { background: var(--surface) !important; border: 1px solid var(--border) !important; box-shadow: none !important; }
+    .cl-headerTitle { color: var(--text) !important; }
+    .cl-formFieldInput {
+      background: rgba(255,255,255,0.05) !important; border-color: var(--border) !important; color: var(--text) !important;
+    }
+    .cl-formButtonPrimary { background: linear-gradient(135deg, #8b5cf6, #6366f1) !important; }
+    .cl-navbarButton { color: var(--text-muted) !important; }
+    .cl-navbarButton:hover, .cl-navbarButton[data-active] { background: rgba(139,92,246,0.1) !important; color: var(--context) !important; }
+
+    /* Stat mini-cards */
+    .mini-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+    .mini-stat {
+      background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.85rem; text-align: center;
+    }
+    .mini-stat-val { font-size: 1.5rem; font-weight: 900; color: var(--text); }
+    .mini-stat-lbl { font-size: 0.68rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.07em; margin-top: 0.2rem; }
+
+    /* Danger zone */
+    .danger-zone {
+      background: var(--fake-bg); border: 1px solid var(--fake-border);
+      border-radius: var(--radius); padding: 1.2rem 1.4rem;
+    }
+    .danger-zone p { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem; line-height: 1.6; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <a href="/" style="display:flex;align-items:center;gap:0.6rem;text-decoration:none">
+          <img src="{{ url_for('static', filename='logo.jpg') }}" alt="SatyaX" class="logo-img" />
+          <span class="logo-text">Satya<span class="logo-accent">X</span></span>
+        </a>
+      </div>
+      <nav style="margin-left:auto;display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+        <a href="/" style="font-size:0.78rem;color:var(--text-dim);text-decoration:none;padding:0.3rem 0.75rem;border:1px solid var(--border);border-radius:99px">← Verify</a>
+        <a href="/dashboard" style="font-size:0.78rem;color:var(--text-dim);text-decoration:none;padding:0.3rem 0.75rem;border:1px solid var(--border);border-radius:99px">Dashboard</a>
+        <a href="/profile" style="font-size:0.78rem;color:var(--accent-cyan);text-decoration:none;padding:0.3rem 0.75rem;border:1px solid rgba(6,182,212,0.3);border-radius:99px;background:rgba(6,182,212,0.07)">Profile</a>
+        <div id="nav-signed-in" style="display:none;align-items:center;gap:0.5rem">
+          <img id="nav-avatar" src="" alt="Profile" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--border);" />
+          <button onclick="satyaxSignOut()" style="font-size:0.75rem;color:var(--text-dim);background:none;border:1px solid var(--border);border-radius:99px;padding:0.28rem 0.65rem;cursor:pointer">Sign Out</button>
+          <a id="nav-admin-link" href="/admin" style="display:none;font-size:0.72rem;color:#fbbf24;text-decoration:none;padding:0.28rem 0.65rem;border:1px solid rgba(251,191,36,0.3);border-radius:99px">Admin</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Profile Page -->
+  <main class="profile-page">
+
+    <!-- Hero card -->
+    <div class="profile-hero">
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar-placeholder" id="prof-avatar-placeholder">?</div>
+        <img id="prof-avatar" src="" alt="Avatar" class="profile-avatar" style="display:none" />
+      </div>
+      <div class="profile-info">
+        <div class="profile-name" id="prof-name">Loading…</div>
+        <div class="profile-email" id="prof-email"></div>
+        <div class="profile-meta">
+          <span class="profile-badge badge-user" id="prof-role-badge">USER</span>
+          <span class="profile-joined" id="prof-joined"></span>
+        </div>
+        <div class="profile-actions">
+          <button class="prof-btn" onclick="openManageAccount()">⚙️ Manage Account</button>
+          <a href="/dashboard" class="prof-btn">📊 Dashboard</a>
+          <a href="/history" class="prof-btn">📋 History</a>
+          <button class="prof-btn danger" onclick="satyaxSignOut()">🚪 Sign Out</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid -->
+    <div class="profile-grid">
+
+      <!-- Account Details -->
+      <div class="profile-card">
+        <div class="profile-card-title">Account Details</div>
+        <div class="info-row">
+          <span class="info-label">Full Name</span>
+          <span class="info-value" id="detail-name">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Email</span>
+          <span class="info-value" id="detail-email">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Role</span>
+          <span class="info-value" id="detail-role">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Member Since</span>
+          <span class="info-value" id="detail-joined">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">User ID</span>
+          <span class="info-value" id="detail-uid" style="font-family:monospace;font-size:0.72rem">—</span>
+        </div>
+      </div>
+
+      <!-- Activity Stats -->
+      <div class="profile-card">
+        <div class="profile-card-title">Activity</div>
+        <div class="mini-stats">
+          <div class="mini-stat">
+            <div class="mini-stat-val" id="act-total">—</div>
+            <div class="mini-stat-lbl">Analyses</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-val" id="act-avg">—</div>
+            <div class="mini-stat-lbl">Avg Score</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-val" id="act-saved">—</div>
+            <div class="mini-stat-lbl">Saved</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-val" id="act-shared">—</div>
+            <div class="mini-stat-lbl">Shared</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Clerk Account Management -->
+      <div class="profile-card profile-card-full">
+        <div class="profile-card-title">Account Management</div>
+        <div id="clerk-user-profile"></div>
+      </div>
+
+      <!-- Danger Zone -->
+      <div class="danger-zone profile-card-full" style="grid-column:1/-1">
+        <div class="profile-card-title" style="color:var(--fake)">⚠ Danger Zone</div>
+        <p>Deleting your account is irreversible. All your saved reports and preferences will be permanently removed. Use the Account Management panel above to delete your account through Clerk's secure interface.</p>
+        <button class="prof-btn danger" onclick="openManageAccount()">Delete Account via Clerk →</button>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <img src="{{ url_for('static', filename='logo_1.jpg') }}" alt="SatyaX" class="footer-logo-img" />
+        <p class="footer-motto">Smart evidence. Transparent reasoning. Better decisions.</p>
+      </div>
+      <nav class="footer-links">
+        <a href="/">Home</a><a href="/methodology">Methodology</a><a href="/faq">FAQ</a>
+      </nav>
+      <p class="footer-copy">&copy; 2026 SatyaX. Powered by BERT + Gemini AI.</p>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='auth.js') }}"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const clerk = await waitForClerk();
+        const user = clerk.user;
+        if (!user) { window.location.href = '/sign-in'; return; }
+
+        const name   = user.fullName || user.firstName || user.primaryEmailAddress?.emailAddress?.split('@')[0] || 'User';
+        const email  = user.primaryEmailAddress?.emailAddress || '';
+        const avatar = user.imageUrl || '';
+        const role   = (user.publicMetadata?.role || 'user').toUpperCase();
+        const joinedMs = user.createdAt;
+        const joined = joinedMs ? new Date(joinedMs).toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'}) : '—';
+
+        // Hero
+        document.getElementById('prof-name').textContent = name;
+        document.getElementById('prof-email').textContent = email;
+        document.getElementById('prof-joined').textContent = 'Joined ' + joined;
+        const roleBadge = document.getElementById('prof-role-badge');
+        roleBadge.textContent = role;
+        if (role === 'ADMIN') roleBadge.classList.replace('badge-user','badge-admin');
+
+        if (avatar) {
+          document.getElementById('prof-avatar').src = avatar;
+          document.getElementById('prof-avatar').style.display = 'block';
+          document.getElementById('prof-avatar-placeholder').style.display = 'none';
+        } else {
+          document.getElementById('prof-avatar-placeholder').textContent = name.charAt(0).toUpperCase();
+        }
+
+        // Details
+        document.getElementById('detail-name').textContent   = name;
+        document.getElementById('detail-email').textContent  = email;
+        document.getElementById('detail-role').textContent   = role;
+        document.getElementById('detail-joined').textContent = joined;
+        document.getElementById('detail-uid').textContent    = user.id;
+
+        // Activity from localStorage
+        const history = (() => { try { return JSON.parse(localStorage.getItem('satya_history')||'[]'); } catch { return []; }})();
+        document.getElementById('act-total').textContent = history.length;
+        const scores = history.filter(h=>h.truth_score!=null).map(h=>h.truth_score);
+        document.getElementById('act-avg').textContent = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : '—';
+
+        // Saved reports count from API
+        try {
+          const token = await getAuthToken();
+          const resp = await fetch('/api/my-reports', { headers: token ? {'Authorization':`Bearer ${token}`} : {} });
+          if (resp.ok) {
+            const data = await resp.json();
+            document.getElementById('act-saved').textContent = (data.reports||[]).length;
+            document.getElementById('act-shared').textContent = (data.reports||[]).filter(r=>r.shared).length;
+          }
+        } catch {}
+
+        // Mount Clerk UserProfile component
+        mountUserProfile('clerk-user-profile', { routing: 'virtual' });
+
+      } catch (e) {
+        console.warn('Profile load error:', e);
+      }
+    });
+
+    function openManageAccount() {
+      // Scroll to Clerk's UserProfile widget
+      const el = document.getElementById('clerk-user-profile');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  </script>
+</body>
+</html>

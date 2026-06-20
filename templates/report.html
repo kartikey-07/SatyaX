@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ report.report_id }} — SatyaX Verification Report</title>
+  <meta name="description" content="AI-generated fact verification report by SatyaX. Verdict: {{ report.verdict }}. Truth Score: {{ report.truth_score }}/100." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <style>
+    /* ── Report-specific styles ── */
+    .report-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1.2rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .report-logo { font-size: 1.35rem; font-weight: 900; color: var(--text); }
+    .report-logo span { color: var(--accent-cyan); }
+    .report-id-badge {
+      font-size: 0.72rem; font-weight: 700;
+      background: rgba(139,92,246,0.12);
+      color: var(--accent-purple);
+      border: 1px solid rgba(139,92,246,0.3);
+      border-radius: 99px; padding: 0.25rem 0.75rem;
+    }
+    .report-ts {
+      font-size: 0.75rem; color: var(--text-dim);
+      margin-left: auto;
+    }
+    .report-actions {
+      display: flex; gap: 0.5rem; align-items: center;
+    }
+    .report-btn {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-size: 0.78rem; font-weight: 600;
+      padding: 0.4rem 1rem; border-radius: 8px;
+      border: none; cursor: pointer; text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .report-btn-pdf {
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      color: #fff;
+    }
+    .report-btn-pdf:hover { opacity: 0.88; transform: translateY(-1px); }
+    .report-btn-copy {
+      background: var(--surface-hover); color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .report-btn-copy:hover { color: var(--text); }
+    .report-btn-home {
+      background: transparent; color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+    .report-btn-home:hover { color: var(--text); }
+
+    .report-container {
+      max-width: 900px; margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    /* Executive summary hero */
+    .report-hero {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem 2rem;
+      margin-bottom: 1.5rem;
+      align-items: center;
+    }
+    .rh-verdict { font-size: 2.2rem; font-weight: 900; margin-bottom: 0.3rem; }
+    .rh-sub { font-size: 0.85rem; color: var(--text-dim); }
+    .rh-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
+    .rh-score-ring {
+      width: 110px; height: 110px;
+      border-radius: 50%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      font-weight: 800; flex-shrink: 0;
+    }
+    .rh-score-num { font-size: 2rem; line-height: 1; }
+    .rh-score-lbl { font-size: 0.65rem; color: var(--text-dim); margin-top: 2px; }
+
+    /* Sections */
+    .report-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 1rem;
+    }
+    .rs-title {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-dim);
+      margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .rs-title::after {
+      content: ""; flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* Input preview */
+    .input-preview {
+      font-size: 0.875rem; color: var(--text-muted); line-height: 1.7;
+      max-height: 180px; overflow: auto;
+      background: rgba(0,0,0,0.15); border-radius: 8px;
+      padding: 1rem; border: 1px solid var(--border);
+      font-family: "Georgia", serif;
+    }
+
+    /* Claims */
+    .claim-row {
+      display: grid; grid-template-columns: 20px 1fr auto;
+      gap: 0.75rem; align-items: start;
+      padding: 0.9rem 0; border-bottom: 1px solid var(--border);
+    }
+    .claim-row:last-child { border-bottom: none; }
+    .claim-num { font-size: 0.75rem; color: var(--text-dim); font-weight: 700; padding-top: 2px; }
+    .claim-text { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+    .claim-evidence { font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem; }
+    .claim-status-badge {
+      font-size: 0.68rem; font-weight: 700; padding: 0.18rem 0.5rem;
+      border-radius: 4px; white-space: nowrap;
+    }
+
+    /* Related articles */
+    .source-row {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 0.75rem 0; border-bottom: 1px solid var(--border);
+    }
+    .source-row:last-child { border-bottom: none; }
+    .source-icon { font-size: 1.1rem; flex-shrink: 0; }
+    .source-name { font-size: 0.78rem; font-weight: 700; color: var(--text); }
+    .source-title { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
+    .source-rel {
+      margin-left: auto; font-size: 0.7rem; font-weight: 700;
+      padding: 0.15rem 0.5rem; border-radius: 4px; white-space: nowrap; flex-shrink: 0;
+    }
+
+    /* Architecture flow */
+    .arch-flow {
+      display: flex; flex-direction: column; gap: 0; align-items: flex-start;
+      padding: 0.5rem 0;
+    }
+    .arch-step {
+      display: flex; align-items: center; gap: 0.75rem; padding: 0.4rem 0.6rem;
+      font-size: 0.82rem; color: var(--text-muted); width: 100%;
+      border-radius: 6px; transition: background 0.2s;
+    }
+    .arch-step:hover { background: rgba(255,255,255,0.03); }
+    .arch-step-num {
+      font-size: 0.65rem; font-weight: 800; color: var(--accent-purple);
+      background: rgba(139,92,246,0.12); border-radius: 4px;
+      padding: 0.1rem 0.4rem; min-width: 22px; text-align: center;
+    }
+    .arch-arrow { color: var(--border); font-size: 0.8rem; margin-left: 0.2rem; }
+
+    /* Copy toast */
+    .copy-toast {
+      position: fixed; bottom: 1.5rem; right: 1.5rem;
+      background: var(--real); color: #fff;
+      padding: 0.6rem 1.2rem; border-radius: 8px;
+      font-size: 0.82rem; font-weight: 600;
+      animation: fadeSlideIn 0.3s ease;
+      z-index: 9999; pointer-events: none;
+    }
+
+    /* Disclaimer footer */
+    .report-disclaimer {
+      font-size: 0.72rem; color: var(--text-dim);
+      text-align: center; padding: 1.5rem;
+      border-top: 1px solid var(--border);
+      line-height: 1.6; max-width: 700px; margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header class="report-header">
+    <div class="report-logo">
+      <a href="/" style="display:flex;align-items:center;gap:0.6rem;text-decoration:none;color:inherit">
+        <img src="{{ url_for('static', filename='logo.jpg') }}" alt="SatyaX" style="width:30px;height:30px;border-radius:6px;object-fit:cover;" />
+        <span>⚡ Satya<span style="color:var(--accent-cyan)">X</span></span>
+      </a>
+    </div>
+    <span class="report-id-badge">{{ report.report_id }}</span>
+    <span class="report-ts">{{ report.created_at }}</span>
+    <div class="report-actions">
+      <a href="/" class="report-btn report-btn-home">← Analyzer</a>
+      <button id="copyBtn" class="report-btn report-btn-copy" onclick="copyReportLink()">🔗 Copy Link</button>
+      <a href="/export-pdf/{{ report.report_id }}" class="report-btn report-btn-pdf">⬇ Download PDF</a>
+    </div>
+  </header>
+
+  <main class="report-container">
+
+    <!-- ── Hero: Executive Summary ── -->
+    {% set verdict = report.verdict | upper %}
+    {% set verdict_colors = {
+      'REAL': ('#10b981','rgba(16,185,129,0.12)'),
+      'FAKE': ('#ef4444','rgba(239,68,68,0.12)'),
+      'MISLEADING': ('#f59e0b','rgba(245,158,11,0.12)'),
+      'PARTIALLY_TRUE': ('#f97316','rgba(249,115,22,0.12)'),
+      'CONTEXT_NEEDED': ('#8b5cf6','rgba(139,92,246,0.12)'),
+      'UNVERIFIED': ('#94a3b8','rgba(148,163,184,0.12)'),
+    } %}
+    {% set vc = verdict_colors.get(verdict, ('#94a3b8','rgba(148,163,184,0.12)')) %}
+
+    <div class="report-hero">
+      <div>
+        <div class="rh-verdict" style="color: {{ vc[0] }}">
+          {% if verdict == 'REAL' %}✅ REAL
+          {% elif verdict == 'FAKE' %}🚫 FAKE
+          {% elif verdict == 'MISLEADING' %}⚠️ MISLEADING
+          {% elif verdict == 'PARTIALLY_TRUE' %}🔶 PARTIALLY TRUE
+          {% elif verdict == 'CONTEXT_NEEDED' %}🔍 CONTEXT NEEDED
+          {% else %}🔘 UNVERIFIED{% endif %}
+        </div>
+        <div class="rh-sub">SatyaX — Evidence-Based Verification Report</div>
+        <div class="rh-meta">
+          {% if report.analysis.get('gemini') %}
+          {% set g = report.analysis.gemini %}
+          {% if g.get('evidence_strength') %}
+          <span class="verdict-badge" style="font-size:0.72rem">Evidence: {{ g.evidence_strength }}</span>
+          {% endif %}
+          {% endif %}
+          <span class="verdict-badge" style="font-size:0.72rem;background:rgba(255,255,255,0.04)">Confidence: {{ report.confidence }}%</span>
+        </div>
+      </div>
+      <div class="rh-score-ring" style="background: {{ vc[1] }}; border: 3px solid {{ vc[0] }}">
+        <div class="rh-score-num" style="color: {{ vc[0] }}">{{ report.truth_score }}</div>
+        <div class="rh-score-lbl">TRUTH SCORE</div>
+      </div>
+    </div>
+
+    <!-- ── ELI5 Summary ── -->
+    {% if report.analysis.get('gemini') and report.analysis.gemini.get('eli5_verdict') %}
+    <div class="report-section">
+      <div class="rs-title">🤖 AI Summary</div>
+      <p style="font-size:0.9rem;color:var(--text-muted);line-height:1.7;font-style:italic">
+        "{{ report.analysis.gemini.eli5_verdict }}"
+      </p>
+    </div>
+    {% endif %}
+
+    <!-- ── Original Input ── -->
+    <div class="report-section">
+      <div class="rs-title">📄 Original Input</div>
+      <div class="input-preview">{{ report.input_text or "(No input text recorded)" }}</div>
+    </div>
+
+    <!-- ── BERT Writing Style ── -->
+    {% if report.analysis.get('bert') %}
+    {% set bert = report.analysis.bert %}
+    <div class="report-section">
+      <div class="rs-title">🧠 Writing Style Analysis</div>
+      <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:1rem">
+        Evaluates linguistic patterns — not factual accuracy.
+      </p>
+      {% set bv = bert.get('verdict','FAKE') %}
+      {% set bc = bert.get('confidence_pct', 50) %}
+      {% set fp = bc if bv == 'FAKE' else (100 - bc) %}
+      {% set metrics = [
+        ('Sensationalism Risk', fp|round|int),
+        ('Clickbait Probability', [100, (fp * 0.88 + 6)|round|int]|min),
+        ('Emotional Language', [100, (fp * 0.82 + 4)|round|int]|min),
+        ('Style Confidence', bc|int),
+      ] %}
+      {% for label, val in metrics %}
+      <div style="margin-bottom:0.75rem">
+        <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:0.3rem">
+          <span style="color:var(--text-muted)">{{ label }}</span>
+          <span style="color:var(--text);font-weight:700">{{ val }}%</span>
+        </div>
+        <div style="height:6px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden">
+          <div style="height:100%;width:{{ val }}%;border-radius:99px;background:
+            {% if val >= 67 %}#ef4444{% elif val >= 34 %}#f59e0b{% else %}#10b981{% endif %};
+            transition:width 1s ease"></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ── Key Claims ── -->
+    {% if report.analysis.get('gemini') and report.analysis.gemini.get('claims') %}
+    <div class="report-section">
+      <div class="rs-title">🔍 Extracted Claims</div>
+      {% for claim in report.analysis.gemini.claims[:5] %}
+      <div class="claim-row">
+        <div class="claim-num">{{ loop.index }}</div>
+        <div>
+          <div class="claim-text">{{ claim.claim if claim is mapping else claim }}</div>
+          {% if claim is mapping and claim.get('evidence') %}
+          <div class="claim-evidence">📎 {{ claim.evidence }}</div>
+          {% endif %}
+        </div>
+        {% if claim is mapping and claim.get('status') %}
+        <span class="claim-status-badge" style="
+          background: {% if 'true' in claim.status|lower %}rgba(16,185,129,0.15){% elif 'false' in claim.status|lower %}rgba(239,68,68,0.15){% else %}rgba(245,158,11,0.15){% endif %};
+          color: {% if 'true' in claim.status|lower %}#10b981{% elif 'false' in claim.status|lower %}#ef4444{% else %}#f59e0b{% endif %}
+        ">{{ claim.status }}</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ── Evidence / Related Articles ── -->
+    {% if report.analysis.get('related_articles') %}
+    <div class="report-section">
+      <div class="rs-title">📰 Evidence Found</div>
+      {% for art in report.analysis.related_articles[:5] %}
+      <div class="source-row">
+        <span class="source-icon">📌</span>
+        <div>
+          <div class="source-name">{{ art.source or 'Unknown' }}</div>
+          <a href="{{ art.url }}" target="_blank" class="source-title" style="text-decoration:none;color:var(--text-muted)">
+            {{ art.title or art.snippet or '' }}
+          </a>
+        </div>
+        <span class="source-rel" style="
+          background: {% if (art.reliability or 5) >= 8 %}rgba(16,185,129,0.12){% elif (art.reliability or 5) >= 5 %}rgba(245,158,11,0.12){% else %}rgba(239,68,68,0.12){% endif %};
+          color: {% if (art.reliability or 5) >= 8 %}#10b981{% elif (art.reliability or 5) >= 5 %}#f59e0b{% else %}#ef4444{% endif %}
+        ">{{ art.reliability or 5 }}/10</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ── AI Reasoning ── -->
+    {% if report.analysis.get('gemini') and report.analysis.gemini.get('summary') %}
+    <div class="report-section">
+      <div class="rs-title">💡 AI Reasoning</div>
+      <p style="font-size:0.875rem;color:var(--text-muted);line-height:1.75">
+        {{ report.analysis.gemini.summary }}
+      </p>
+    </div>
+    {% endif %}
+
+    <!-- ── Architecture ── -->
+    <div class="report-section">
+      <div class="rs-title">⚙ Analysis Pipeline</div>
+      <div class="arch-flow">
+        {% set steps = [
+          'User Input',
+          'Content Extraction (Trafilatura / BeautifulSoup)',
+          'Writing Style Analysis (BERT)',
+          'Claim Extraction (Gemini AI)',
+          'Real-Time Evidence Retrieval',
+          'Source Reliability Scoring',
+          'AI Fact Verification (Gemini Flash)',
+          'Truth Score: ' ~ report.truth_score ~ '/100',
+          'Final Verdict: ' ~ report.verdict,
+        ] %}
+        {% for step in steps %}
+        <div class="arch-step">
+          <span class="arch-step-num">{{ loop.index }}</span>
+          <span>{{ step }}</span>
+          {% if not loop.last %}<span class="arch-arrow" style="margin-left:auto">↓</span>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── Disclaimer ── -->
+  <div class="report-disclaimer">
+    This report was generated by <strong>SatyaX</strong>, an AI-assisted fact-verification platform.
+    Results are based on publicly available information at analysis time.
+    This is not a substitute for expert judgment or professional fact-checking.
+    <br/><strong>{{ report.report_id }}</strong> · {{ report.created_at }}
+  </div>
+
+  <script>
+    function copyReportLink() {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = '✓ Copied!';
+        btn.style.color = '#10b981';
+        const toast = document.createElement('div');
+        toast.className = 'copy-toast';
+        toast.textContent = '✓ Report link copied!';
+        document.body.appendChild(toast);
+        setTimeout(() => {
+          toast.remove();
+          btn.textContent = '🔗 Copy Link';
+          btn.style.color = '';
+        }, 2500);
+      });
+    }
+  </script>
+</body>
+</html>

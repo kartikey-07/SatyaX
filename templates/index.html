@@ -3,40 +3,461 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fake News Generator & Detector</title>
+  <title>SatyaX | AI-Powered Fact Verification &amp; Misinformation Analysis Platform</title>
+  <meta name="description" content="SatyaX helps users verify articles, headlines, URLs, and online claims using evidence retrieval, NLP analysis, source reliability assessment, and AI-powered reasoning." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
-  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;700&display=swap" rel="stylesheet" />
+  {% if clerk_frontend %}
+  <script async crossorigin="anonymous"
+    data-clerk-publishable-key="{{ clerk_pk }}"
+    src="{{ clerk_frontend }}/npm/@clerk/clerk-js@5/dist/clerk.browser.js">
+  </script>
+  {% endif %}
 </head>
 <body>
-  <div class="container">
-    <h1>📰 Fake News Generator & Detector</h1>
 
-    <section class="generator">
-      <h2>🧠 Generate Fake Headline</h2>
-      <input type="text" id="seedText" placeholder="Enter a topic..." />
-      <button onclick="generateHeadline()">Generate</button>
-      <p id="generatedHeadline"></p>
-    </section>
+  <!-- ── Header ── -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <a href="/" style="display:flex;align-items:center;gap:0.6rem;text-decoration:none">
+          <img src="{{ url_for('static', filename='logo.jpg') }}" alt="SatyaX" class="logo-img" />
+          <span class="logo-text">Satya<span class="logo-accent">X</span></span>
+        </a>
+      </div>
+      <p class="tagline">AI-Powered Fact Verification &amp; Misinformation Analysis</p>
+      <nav class="header-nav">
+        <a href="/" class="header-nav-link" id="nav-home">Home</a>
+        <a href="/how-it-works" class="header-nav-link" id="nav-how">How It Works</a>
+        <a href="/methodology" class="header-nav-link" id="nav-method">Methodology</a>
+        <a href="/history" class="header-nav-link" id="nav-history">History</a>
+        <a href="/faq" class="header-nav-link" id="nav-faq">FAQ</a>
 
-    <hr />
+        <!-- Logged-out nav -->
+        <div id="nav-signed-out" style="display:flex;align-items:center;gap:0.4rem">
+          <a href="/sign-in" class="header-nav-link" style="color:var(--text-muted)">Sign In</a>
+          <a href="/sign-up" class="header-nav-btn">Sign Up</a>
+        </div>
 
-    <section class="detector">
-      <h2>🕵️‍♂️ Detect Real or Fake (Headline)</h2>
-      <input type="text" id="headlineText" placeholder="Enter a headline to classify..." />
-      <button onclick="classifyHeadline()">Classify</button>
-      <p id="classificationResult"></p>
-    </section>
+        <!-- Logged-in nav -->
+        <div id="nav-signed-in" style="display:none;align-items:center;gap:0.5rem">
 
-    <hr />
+          <!-- Dashboard pill -->
+          <a href="/dashboard" class="header-nav-link">Dashboard</a>
 
-    <section class="news">
-      <h2>🌐 Live News </h2>
-      <input type="text" id="newsQuery" placeholder="Search topic (e.g. politics, sports)..." />
-      <button onclick="fetchNews()">Fetch News</button>
-      <div id="newsResults" class="news-cards"></div>
-    </section>
-  </div>
+          <!-- Avatar + username -->
+          <a href="/profile" style="display:flex;align-items:center;gap:0.45rem;text-decoration:none;padding:0.2rem 0.6rem 0.2rem 0.3rem;border:1px solid var(--border);border-radius:99px;background:var(--surface);transition:all 0.2s" onmouseover="this.style.borderColor='rgba(139,92,246,0.5)'" onmouseout="this.style.borderColor='var(--border)'">
+            <img id="nav-avatar" src="" alt="Profile" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:2px solid rgba(139,92,246,0.5);background:#1e1b3a;flex-shrink:0;" />
+            <span id="nav-username" style="font-size:0.78rem;font-weight:600;color:var(--text-muted);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+          </a>
+
+          <!-- Sign Out pill button -->
+          <button onclick="satyaxSignOut()" title="Sign out"
+            style="font-size:0.75rem;font-weight:600;color:#f87171;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:99px;padding:0.32rem 0.8rem;cursor:pointer;white-space:nowrap;transition:all 0.2s;font-family:inherit;"
+            onmouseover="this.style.background='rgba(239,68,68,0.16)';this.style.borderColor='rgba(239,68,68,0.5)';this.style.color='#fca5a5'"
+            onmouseout="this.style.background='rgba(239,68,68,0.08)';this.style.borderColor='rgba(239,68,68,0.25)';this.style.color='#f87171'">
+            Sign Out
+          </button>
+
+          <!-- Admin pill (shown only for admins) -->
+          <a id="nav-admin-link" href="/admin" style="display:none;font-size:0.72rem;font-weight:700;color:#fbbf24;text-decoration:none;padding:0.32rem 0.7rem;border:1px solid rgba(251,191,36,0.3);border-radius:99px;background:rgba(251,191,36,0.08);white-space:nowrap;transition:all 0.2s" onmouseover="this.style.background='rgba(251,191,36,0.15)'" onmouseout="this.style.background='rgba(251,191,36,0.08)'">⚙ Admin</a>
+
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ── Tab Navigation ── -->
+  <nav class="tab-nav" role="tablist">
+    <button class="tab-btn active" id="tab-checker" role="tab" aria-selected="true" onclick="switchTab('checker')">
+      <span class="tab-icon">🔍</span>
+      <span>Fact Checker</span>
+    </button>
+    <button class="tab-btn" id="tab-comedy" role="tab" aria-selected="false" onclick="switchTab('comedy')">
+      <span class="tab-icon">🎭</span>
+      <span>Comedy Generator</span>
+    </button>
+    <button class="tab-btn" id="tab-news" role="tab" aria-selected="false" onclick="switchTab('news')">
+      <span class="tab-icon">📰</span>
+      <span>Live News</span>
+    </button>
+  </nav>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- TAB 1: FACT CHECKER                    -->
+  <!-- ═══════════════════════════════════════ -->
+  <main class="tab-content active" id="panel-checker" role="tabpanel">
+    <div class="container">
+
+      <!-- Input Card -->
+      <div class="card checker-input-card">
+        <div class="card-header">
+          <h1 class="card-title">⚡ SatyaX Verification Engine</h1>
+          <p class="card-subtitle">Analyze articles, headlines, URLs, and online claims using evidence retrieval, NLP analysis, source reliability assessment, and AI-powered reasoning.</p>
+        </div>
+
+        <!-- Input mode toggle -->
+        <div class="input-toggle" role="group" aria-label="Input mode">
+          <button class="toggle-btn active" id="toggle-text" onclick="setInputMode('text')">✏️ Paste Text</button>
+          <button class="toggle-btn" id="toggle-url" onclick="setInputMode('url')">🔗 Enter URL</button>
+        </div>
+
+        <!-- Text input -->
+        <div id="text-input-area">
+          <textarea
+            id="articleText"
+            class="article-textarea"
+            placeholder="Paste a news headline, full article text, or anything you want to fact-check here..."
+            rows="7"
+          ></textarea>
+        </div>
+
+        <!-- URL input -->
+        <div id="url-input-area" style="display:none;">
+          <input
+            type="url"
+            id="articleUrl"
+            class="url-input"
+            placeholder="https://example.com/news-article"
+          />
+          <p class="input-hint">📌 We'll scrape the full article text automatically using AI extraction.</p>
+        </div>
+
+        <button class="btn btn-primary" id="analyzeBtn" onclick="analyzeContent()">
+          <span class="btn-icon">⚡</span>
+          <span>Verify Content</span>
+        </button>
+      </div>
+
+      <!-- Results Panel (hidden initially) -->
+      <div id="analysisResults" class="analysis-results" style="display:none;">
+
+        <!-- Verdict Banner -->
+        <div class="verdict-banner" id="verdictBanner">
+          <div class="verdict-left">
+            <div class="verdict-badge" id="verdictBadge">—</div>
+            <div class="verdict-meta">
+              <div class="verdict-label" id="verdictLabel">Analyzing...</div>
+              <div class="verdict-sub" id="verdictSub"></div>
+            </div>
+          </div>
+          <div class="confidence-block">
+            <div class="confidence-label">AI Confidence</div>
+            <div class="confidence-bar-wrap">
+              <div class="confidence-bar" id="confidenceBar" style="width:0%"></div>
+            </div>
+            <div class="confidence-pct" id="confidencePct">—</div>
+          </div>
+        </div>
+
+        <!-- ELI5 Verdict -->
+        <div class="result-section eli5-section" id="eli5Section" style="display:none;">
+          <h2 class="section-title">🧒 In Simple Words</h2>
+          <div class="eli5-box" id="eli5Box"></div>
+        </div>
+
+        <!-- Truth Score -->
+        <div class="result-section truth-score-section" id="truthScoreSection" style="display:none;">
+          <h2 class="section-title">📊 Truth Score</h2>
+          <div class="truth-score-wrap">
+            <div class="truth-score-bar-bg">
+              <div class="truth-score-bar" id="truthScoreBar" style="width:0%"></div>
+            </div>
+            <div class="truth-score-num" id="truthScoreNum">—/100</div>
+          </div>
+          <p class="truth-score-hint" id="truthScoreHint"></p>
+        </div>
+
+        <!-- BERT Writing Style Analysis -->
+        <div class="result-section bert-section" id="bertSection">
+          <div class="bert-header">
+            <h2 class="section-title">📝 BERT Writing Style Analysis</h2>
+            <div class="bert-tooltip-wrap">
+              <span class="bert-tooltip-icon">ℹ</span>
+              <div class="bert-tooltip-box">
+                This analysis evaluates writing patterns and linguistic characteristics.
+                It is <strong>not</strong> a factual verification result.
+              </div>
+            </div>
+          </div>
+          <p class="section-hint" style="margin-top:0.1rem;">
+            Trained on 40,000+ articles · Detects writing tone, not facts
+          </p>
+          <div class="bert-metrics" id="bertMetrics">
+            <div class="bert-metric-row">
+              <span class="bert-metric-label">Sensationalism Risk</span>
+              <div class="bert-metric-bar-bg">
+                <div class="bert-metric-bar" id="bertSensBar" style="width:0%"></div>
+              </div>
+              <span class="bert-metric-val" id="bertSensVal">—</span>
+            </div>
+            <div class="bert-metric-row">
+              <span class="bert-metric-label">Clickbait Probability</span>
+              <div class="bert-metric-bar-bg">
+                <div class="bert-metric-bar" id="bertClickBar" style="width:0%"></div>
+              </div>
+              <span class="bert-metric-val" id="bertClickVal">—</span>
+            </div>
+            <div class="bert-metric-row">
+              <span class="bert-metric-label">Emotional Language Score</span>
+              <div class="bert-metric-bar-bg">
+                <div class="bert-metric-bar" id="bertEmoBar" style="width:0%"></div>
+              </div>
+              <span class="bert-metric-val" id="bertEmoVal">—</span>
+            </div>
+            <div class="bert-metric-row">
+              <span class="bert-metric-label">Writing Style Confidence</span>
+              <div class="bert-metric-bar-bg">
+                <div class="bert-metric-bar bert-metric-bar--neutral" id="bertConfBar" style="width:0%"></div>
+              </div>
+              <span class="bert-metric-val" id="bertConfVal">—</span>
+            </div>
+          </div>
+          <div class="bert-style-tag" id="bertStyleTag"></div>
+        </div>
+
+        <!-- Gemini Summary -->
+        <div class="result-section" id="geminiSummarySection" style="display:none;">
+          <h2 class="section-title">🧠 AI Analysis Summary</h2>
+          <div class="summary-box" id="summaryBox"></div>
+        </div>
+
+        <!-- Evidence Found -->
+        <div class="result-section" id="evidenceSection" style="display:none;">
+          <h2 class="section-title">🔎 Evidence Found</h2>
+          <p class="section-hint">Facts verified from real-time web search.</p>
+          <div id="evidenceList" class="evidence-list"></div>
+        </div>
+
+        <!-- Paragraph Breakdown -->
+        <div class="result-section" id="paragraphSection" style="display:none;">
+          <h2 class="section-title">📄 Paragraph-by-Paragraph Breakdown</h2>
+          <p class="section-hint">Each section of the article has been individually assessed.</p>
+          <div id="paragraphList" class="paragraph-list"></div>
+        </div>
+
+        <!-- Key Claims -->
+        <div class="result-section" id="claimsSection" style="display:none;">
+          <h2 class="section-title">🎯 Key Claims Analysis</h2>
+          <div id="claimsList" class="claims-list"></div>
+        </div>
+
+        <!-- Confusion Clarification -->
+        <div class="result-section" id="clarificationSection" style="display:none;">
+          <h2 class="section-title">💡 What You Should Know</h2>
+          <div class="clarification-box" id="clarificationBox"></div>
+        </div>
+
+        <!-- Related Real Articles -->
+        <div class="result-section" id="relatedSection">
+          <h2 class="section-title">🌐 Related Real Articles</h2>
+          <p class="section-hint">Cross-reference sources from real-time web search. Reliability rated 1–10.</p>
+          <div id="relatedList" class="related-grid"></div>
+        </div>
+
+        <!-- ── Post-Analysis Action Bar ── -->
+        <div id="postAnalysisBar" class="post-analysis-bar" style="display:none;">
+          <div id="scrapeLayerNotice" class="scrape-layer-notice" style="display:none;">
+            <span>🔄</span>
+            <span id="scrapeLayerMsg">Fallback extraction used successfully.</span>
+          </div>
+          <div class="pab-actions">
+            <button id="shareBtn" class="pab-btn pab-btn-share" onclick="shareResult()">
+              <span>🔗</span> Share Result
+            </button>
+            <button id="pdfBtn" class="pab-btn pab-btn-pdf" onclick="downloadPDF()">
+              <span>⬇</span> Download PDF
+            </button>
+            <a href="/history" class="pab-btn pab-btn-history">
+              <span>📋</span> View History
+            </a>
+          </div>
+          <!-- Share panel (hidden until Share is clicked) -->
+          <div id="sharePanelInline" class="share-panel-inline" style="display:none;">
+            <div class="spi-title">✓ Shareable Report Created</div>
+            <div class="spi-url-row">
+              <input type="text" id="shareUrlInput" class="spi-url-input" readonly />
+              <button class="spi-copy-btn" onclick="copyShareUrl()">Copy</button>
+            </div>
+            <div id="spiCopied" class="spi-copied" style="display:none;">✓ Copied to clipboard!</div>
+          </div>
+        </div>
+
+      </div><!-- /analysisResults -->
+
+      <!-- Loading State -->
+      <div id="analyzeLoader" class="loader-card" style="display:none;">
+        <div class="loader-spinner"></div>
+        <div class="loader-steps">
+          <div class="loader-step active" id="step1">🧠 Running BERT classification...</div>
+          <div class="loader-step" id="step2">🌐 Searching for related real news...</div>
+          <div class="loader-step" id="step3">⚡ Gemini AI analyzing paragraph by paragraph...</div>
+          <div class="loader-step" id="step4">✅ Building your report...</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- TAB 2: COMEDY GENERATOR                -->
+  <!-- ═══════════════════════════════════════ -->
+  <main class="tab-content" id="panel-comedy" role="tabpanel">
+    <div class="container">
+
+      <div class="card comedy-card">
+        <div class="comedy-disclaimer-banner">
+          🎭 <strong>For Entertainment Only</strong> — This AI generates <em>satirical comedy headlines</em> and fake articles for laughs. Nothing here is real news!
+        </div>
+
+        <div class="card-header">
+          <h1 class="card-title">🎭 Comedy Headline Generator</h1>
+          <p class="card-subtitle">Enter any topic and watch GPT-2 spin it into hilariously absurd breaking comedy news. Perfect for satirical content, parties, or just a good laugh.</p>
+        </div>
+
+        <div class="generator-input-row">
+          <input
+            type="text"
+            id="seedText"
+            class="topic-input"
+            placeholder="Enter a topic (e.g. climate change, pizza, cats in space...)"
+            onkeydown="if(event.key==='Enter') generateComedy()"
+          />
+          <button class="btn btn-comedy" onclick="generateComedy()" id="generateBtn">
+            <span class="btn-icon">🎲</span> Generate
+          </button>
+        </div>
+
+        <!-- Comedy Result -->
+        <div id="comedyResult" style="display:none;">
+          <div class="breaking-ticker">
+            <span class="ticker-label">🚨 BREAKING COMEDY NEWS</span>
+            <span class="ticker-divider">|</span>
+            <span id="tickerText"></span>
+          </div>
+
+          <div class="comedy-article-card">
+            <div class="comedy-headline" id="comedyHeadline"></div>
+            <div class="comedy-article-body" id="comedyArticleBody"></div>
+            <div class="comedy-footer-disclaimer" id="comedyDisclaimer"></div>
+          </div>
+
+          <div class="comedy-actions">
+            <button class="btn btn-outline" onclick="copyComedy()">📋 Copy Headline</button>
+            <button class="btn btn-outline" onclick="generateComedy()">🔄 Generate Another</button>
+            <button class="btn btn-outline" onclick="factCheckGenerated()">🔍 Fact-Check This</button>
+          </div>
+        </div>
+
+        <!-- Comedy Loader -->
+        <div id="comedyLoader" style="display:none;" class="comedy-loader">
+          <div class="loader-spinner small"></div>
+          <span>GPT-2 is cooking up something ridiculous...</span>
+        </div>
+
+      </div>
+
+      <!-- Examples -->
+      <div class="card topic-examples-card">
+        <h2 class="section-title">💡 Try These Topics</h2>
+        <div class="topic-chips">
+          <button class="chip" onclick="setTopic('artificial intelligence')">🤖 AI</button>
+          <button class="chip" onclick="setTopic('climate change')">🌍 Climate</button>
+          <button class="chip" onclick="setTopic('stock market crash')">📉 Markets</button>
+          <button class="chip" onclick="setTopic('pizza shortage')">🍕 Pizza</button>
+          <button class="chip" onclick="setTopic('cats on the moon')">🐱 Cats</button>
+          <button class="chip" onclick="setTopic('politicians')">🏛️ Politics</button>
+          <button class="chip" onclick="setTopic('elon musk')">🚀 Elon</button>
+          <button class="chip" onclick="setTopic('monsoon season')">🌧️ Monsoon</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- TAB 3: LIVE NEWS                       -->
+  <!-- ═══════════════════════════════════════ -->
+  <main class="tab-content" id="panel-news" role="tabpanel">
+    <div class="container">
+
+      <div class="card">
+        <div class="card-header">
+          <h1 class="card-title">📰 Live News Feed</h1>
+          <p class="card-subtitle">Browse the latest news on any topic. Click "Fact-Check" on any article to instantly analyze it with our AI.</p>
+        </div>
+
+        <!-- Try These Topics -->
+        <div class="news-topics-block">
+          <div class="news-topics-label">💡 Try These Topics</div>
+          <div class="news-topics-chips" id="newsCategories">
+            <button class="news-chip active" onclick="selectNewsCategory(this,'top headlines')"><span class="chip-icon">🌐</span>Top Headlines</button>
+            <button class="news-chip" onclick="selectNewsCategory(this,'AI artificial intelligence')"><span class="chip-icon">🤖</span>AI</button>
+            <button class="news-chip" onclick="selectNewsCategory(this,'climate')"><span class="chip-icon">🌍</span>Climate</button>
+            <button class="news-chip" onclick="selectNewsCategory(this,'markets finance')"><span class="chip-icon">📈</span>Markets</button>
+            <button class="news-chip" onclick="selectNewsCategory(this,'politics')"><span class="chip-icon">🏛️</span>Politics</button>
+            <button class="news-chip" onclick="selectNewsCategory(this,'technology')"><span class="chip-icon">💻</span>Technology</button>
+            <button class="news-chip" onclick="selectNewsCategory(this,'science')"><span class="chip-icon">🔬</span>Science</button>
+            <button class="news-chip" onclick="selectNewsCategory(this,'health')"><span class="chip-icon">🏥</span>Health</button>
+            <button class="news-chip" onclick="selectNewsCategory(this,'sports')"><span class="chip-icon">⚽</span>Sports</button>
+            <button class="news-chip" onclick="selectNewsCategory(this,'entertainment')"><span class="chip-icon">🎬</span>Entertainment</button>
+            <button class="news-chip" onclick="selectNewsCategory(this,'India')"><span class="chip-icon">🇮🇳</span>India</button>
+            <button class="news-chip" onclick="selectNewsCategory(this,'world')"><span class="chip-icon">✈️</span>World</button>
+          </div>
+        </div>
+
+        <div class="news-search-row">
+          <input
+            type="text"
+            id="newsQuery"
+            class="topic-input"
+            placeholder="Or search any custom topic..."
+            onkeydown="if(event.key==='Enter') fetchNews()"
+          />
+          <button class="btn btn-primary" onclick="fetchNews()">
+            <span class="btn-icon">🔎</span> Search
+          </button>
+        </div>
+      </div>
+
+      <div id="newsLoader" style="display:none;" class="news-loader">
+        <div class="loader-spinner"></div>
+        <span>Fetching live news...</span>
+      </div>
+
+      <div id="newsResults" class="news-grid"></div>
+
+      <!-- Load More Button -->
+      <div id="loadMoreNewsContainer" class="news-load-more-wrap" style="display:none;">
+        <button id="loadMoreNewsBtn" class="btn btn-outline" onclick="loadMoreNews()">
+          <span>➕</span> Load More
+        </button>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <img src="{{ url_for('static', filename='logo_1.jpg') }}" alt="SatyaX" class="footer-logo-img" />
+        <p class="footer-motto">Smart evidence. Transparent reasoning. Better decisions.</p>
+      </div>
+      <nav class="footer-links">
+        <a href="/how-it-works">How It Works</a>
+        <a href="/methodology">Methodology</a>
+        <a href="/history">History</a>
+        <a href="/faq">FAQ</a>
+      </nav>
+      <p class="footer-disclaimer">⚠️ AI analysis is an assistive tool. Always verify critical information with multiple trusted sources.</p>
+      <p class="footer-copy">&copy; 2026 SatyaX. Powered by BERT + Gemini AI + DuckDuckGo.</p>
+    </div>
+  </footer>
 
   <script src="{{ url_for('static', filename='script.js') }}"></script>
+  <script src="{{ url_for('static', filename='auth.js') }}"></script>
 </body>
 </html>
